@@ -1,0 +1,230 @@
+section {
+    margin: 6rem 0;
+}
+
+/* ======== story section ========= */
+
+section.story-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 10%;
+    margin-top: 0;
+}
+
+.story {
+    display: flex;
+    align-items: center;
+    gap: 10%;
+    perspective: 1500px;
+}
+
+p.text {
+    line-height: 1.6rem;
+    letter-spacing: .04rem;
+    word-spacing: .2rem;
+    width: 50vw;
+    min-width: 348px;
+    position: relative;
+}
+
+.text .quote {
+    font-size: 5rem;
+    font-weight: 600;
+    /* line-height: 0; */
+}
+
+.quote.last {
+    position: absolute;
+    right: 5%;
+    bottom: -30%;
+    transform: rotateY(180deg);
+}
+
+.image {
+    position: relative;
+    flex-shrink: 1;
+    perspective: 1500px;
+    /* transform-style: preserve-3d; */
+    /* perspective-origin: 0; */
+}
+
+.image img {
+    flex: 0 1 300px; /* image takes at least 300px, grows equally */
+    width: 35vw;
+    /* max-width: 100%; */
+    min-width: 300px;
+    transform:  rotateY(-30deg);
+}
+.img-cover {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-image: radial-gradient(transparent, hsla(0, 0%, 0%, .2)),
+                    linear-gradient(to right, hsla(0, 0%, 0%, .3) 10%, transparent);
+    transform:  rotateY(-30deg);
+}
+
+.image::before, .image::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: none;
+    z-index: -1;
+}
+
+.image::before {
+    border: 5px solid red;
+    left: -4%;
+    top: -8%;  
+    transform: rotateY(30deg);
+}
+
+.image::after {
+    border: 5px solid var(--main-font-color);
+    bottom: -6%;
+    right: -4%;
+    transform: rotateY(30deg);
+}
+
+/* ======== dashboard section ===========  */
+
+section.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    background-image: url('../public/images/red-background.jpg');
+    background-position: center;
+    padding: 3.2rem 0;
+    position: relative;
+}
+.dashboard::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: hsla(0, 0%, 0%, .5);
+}
+
+@keyframes leftUp {
+    50% {
+        transform: translateX(-20px);
+        z-index: 1;
+    }
+    100% {
+        z-index: 1;
+        transform: translateX(0);
+        /* scale: 1.1; */
+    }
+}
+
+.dash-card {
+    text-align: center;
+    padding: 2.6rem 1.8rem;
+    border-radius: 12px;
+    min-width: 250px;
+    position: relative;
+    border: 1px solid hsla(0, 0%, 50%, .4);
+    /* background-color: hsl(0, 0%, 0%); */
+    background-image: linear-gradient(40deg, hsla(0, 0%, 50%, .4), transparent);
+    backdrop-filter: blur(5px);
+    color: hsl(0, 0%, 86%);
+    margin-right: -1.6rem;
+    margin-top: -1.6rem;
+    transition: scale .5s ease;
+}
+.dash-card:hover {
+    animation: leftUp .5s ease 1 forwards;
+    scale: 1.1;
+}
+
+.big-num {
+    font-size: 6rem;
+    font-weight: 500;
+}
+
+/* =========== gallery section =========== */
+
+section.gallery-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gallery-container h1 {
+    margin-bottom: 2rem;
+}
+.gallery-container p {
+    padding-bottom: 1.4rem;
+    width: fit-content;
+    position: relative;
+}
+
+.gallery {
+    display: flex;
+    gap: 1.6rem;
+    padding: 1.6rem;
+    width: 100%;
+}
+
+.column {
+    width: 33%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+}
+
+.gallery img {
+    width: 100%;
+    /* height: auto; */
+}
+
+@media screen and (max-width: 760px) {
+    .story {
+        flex-wrap: wrap;
+        gap: 7rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+
+    .image {
+        grid-row: 1;
+    }
+
+    p.text {
+        width: 60vw;
+    }
+    .image img {
+        width: 70vw;
+    }
+}
+
+@media screen and (width < 500px) {
+
+    /* ======= dashboard ========= */
+
+    section.dashboard {
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        margin-top: 8rem;
+    }
+
+    /* ======== gallery ========= */
+
+    .gallery {
+        padding: .6rem;
+        gap: .6rem;
+    }
+
+    .column {
+        gap: .6rem;
+    }
+    
+}
