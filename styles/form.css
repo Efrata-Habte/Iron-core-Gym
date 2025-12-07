@@ -1,0 +1,139 @@
+section.main {
+    /* position: absolute;
+    top: 0;
+    height: 100vh;
+    width: 100vw; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.contact {
+    padding: 4rem 0;
+}
+
+h1 {
+    margin-bottom: 0;
+    font-size: 3rem;
+    text-align: center;
+}
+h1::before {
+    display: none;
+}
+
+form hr {
+    border: 0;
+    border-bottom: 1px solid var(--border-color);
+    margin: .6rem 0;
+}
+
+form {
+    padding: 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-radius: 1rem;
+    /* background-color: hsl(0, 0%, 30%); */
+    background-image: linear-gradient(40deg,hsla(0, 0%, 50%, .4), transparent);
+    backdrop-filter: blur(13px);
+    border: 1px solid hsla(0, 0%, 50%, .4);
+    position: relative;
+}
+
+.input-box {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.input-box svg {
+    width: 30px;
+}
+
+label {
+    display: block;
+    padding-bottom: 6px;
+}
+
+input {
+    width: 100%;
+    padding: 4px 8px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--main-font-color);
+    color: var(--main-font-color);
+}
+input:focus {
+    outline: none;
+    border-bottom-width: 2px;
+}
+
+select {
+    width: 100%;
+    padding: 4px 8px;
+    background: none;
+    color: var(--main-font-color);
+    border: 1px dashed var(--border-color);
+}
+
+option {
+    background-color: var(--body-bg-color);
+}
+
+form a {
+    color: var(--red-font-color);
+    text-underline-offset: 2px;
+}
+
+textarea {
+    width: 100%;
+    height: 6rem;
+    padding: 4px 8px;
+    background: none;
+    border: .1px solid var(--main-font-color);
+    border-radius: 8px;
+}
+
+.submit {
+    width: 100%;
+    background-color: red;
+    color: #eee;
+    margin-top: 1.4rem;
+}
+
+.submit:hover {
+    background-color: hsl(0, 100%, 46%);
+    color: #eee;
+}
+
+.b1 {
+    width: 260px;
+    height: 260px;
+    left: 10%;
+    top: 15%;
+}
+.b2 {
+    width: 280px;
+    height: 280px;
+    right: 10%;
+    bottom: 10%;
+}
+
+footer {
+    margin-top: 0;
+}
+
+@media screen and (width < 500px) {
+    .b2 {
+        bottom: -5%;
+        right: -10%;
+    }
+    .b1 {
+        left: -10%;
+
+    }
+
+    .ball {
+        scale: .7;
+    }
+}
