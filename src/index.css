@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/* ============ Custom Theme Variables ============ */
+@theme {
+  /* Iron Core Brand Colors */
+  --color-ic-red: hsl(0, 100%, 56%);
+  --color-ic-red-dark: hsl(0, 100%, 43%);
+  --color-ic-red-light: hsl(0, 100%, 44%);
+  
+  /* Dark Theme */
+  --color-ic-dark-bg: hsl(0, 0%, 10%);
+  --color-ic-dark-stat: hsl(0, 0%, 15%);
+  --color-ic-dark-ball: hsl(0, 0%, 24%);
+  
+  /* Light Theme */
+  --color-ic-light-bg: hsl(0, 0%, 96%);
+  --color-ic-light-stat: hsl(0, 0%, 75%);
+  --color-ic-light-ball: hsl(0, 0%, 44%);
+  
+  /* Border Colors */
+  --color-border: hsla(0, 0%, 70%, 0.3);
+  --color-border-light: hsla(0, 0%, 60%, 0.2);
+  
+  /* Font Families */
+  --font-sans: 'Instrument Sans', sans-serif;
+  --font-heading: 'Work Sans', sans-serif;
+  --font-display: 'Anton', sans-serif;
+  --font-accent: 'Alata', sans-serif;
+  
+  /* Animations */
+  --animate-fade-in: fade-in 0.7s ease-out forwards;
+  --animate-left-up: left-up 0.5s ease forwards;
+}
+
+/* ============ Base Styles ============ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-ic-dark-bg);
+  color: white;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode when .light class is on html/body */
+.light body,
+body.light {
+  background-color: var(--color-ic-light-bg);
+  color: black;
+}
+
+/* ============ Glassmorphism Effect ============ */
+.glass {
+  background-image: linear-gradient(40deg, hsla(0, 0%, 8%, 0.5), hsla(0, 0%, 48%, 0.2));
+  backdrop-filter: blur(8px);
+  border: 1px solid hsla(0, 0%, 50%, 0.1);
+}
+
+/* ============ Floating Balls ============ */
+.ball {
+  position: absolute;
+  border-radius: 50%;
+  box-shadow: -10px 14px 28px hsla(0, 0%, 0%, 0.3);
+  z-index: -1;
+}
+
+.ball-red {
+  background-image: linear-gradient(70deg, hsl(0, 100%, 15%) 36%, hsl(0, 100%, 50%));
+}
+
+.ball-black {
+  background-image: linear-gradient(70deg, black 36%, var(--color-ic-dark-ball));
+}
+
+.light .ball-black {
+  background-image: linear-gradient(70deg, black 36%, var(--color-ic-light-ball));
+}
+
+/* ============ Section Heading with Red Line ============ */
+.section-heading {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 3rem;
+  position: relative;
+  margin-bottom: 4rem;
+}
+
+.section-heading::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: var(--color-ic-red);
+  width: 100px;
+  height: 3px;
+  border-radius: 8px;
+  margin-left: 10px;
+}
+
+/* ============ Red Accent Text ============ */
+.red-text {
+  color: var(--color-ic-red-dark);
+  font-family: var(--font-accent);
+}
+
+p .red-text {
+  font-size: larger;
+}
+
+/* ============ Keyframe Animations ============ */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(200px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes left-up {
+  50% {
+    transform: translateX(-20px);
+    z-index: 1;
+  }
+  100% {
+    z-index: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============ Quote Styling ============ */
+.quote {
+  display: block;
+  font-family: 'Catamaran', sans-serif;
+  font-size: 3.6rem;
+  line-height: 0;
+  padding-top: 20px;
+}
