@@ -1,0 +1,22 @@
+@media screen and (max-width: 760px) {
+
+    /* Hide desktop nav on mobile */
+    header>nav:not(.narrow) {
+        display: none;
+    }
+
+    /* Show hamburger menu on mobile */
+    .menu {
+        display: block;
+    }
+
+    /* Prevent body scroll when menu is open */
+    body.menu-open {
+        overflow: hidden;
+    }
+}
+
+/* Ensure mobile menu overlay covers screen if that's the intention, 
+   but original CSS implies 'right: 20px', 'top: 20px', 'width: fit-content'.
+   We stick to original CSS for .narrow styling.
+*/
