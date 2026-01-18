@@ -12,22 +12,21 @@ const columns = [
 
 export default function Gallery() {
     return (
-        <section className="flex flex-col items-center my-24">
+        <section className="gallery-container">
             <SectionHeading centered>GALLERY</SectionHeading>
 
-            <p className="pb-5 w-fit relative">
+            <p className="gallery-desc">
                 Become inspired by <span className="red-text">our collection.</span>
             </p>
 
-            <div className="flex gap-6 p-6 w-full">
+            <div className="gallery">
                 {columns.map((column, colIndex) => (
-                    <div key={colIndex} className="w-1/3 flex flex-col gap-6">
+                    <div key={colIndex} className="column">
                         {column.map((src) => (
                             <img
                                 key={src}
                                 src={src}
                                 alt="Gallery image"
-                                className="w-full rounded hover:opacity-80 transition-opacity"
                                 loading="lazy"
                             />
                         ))}

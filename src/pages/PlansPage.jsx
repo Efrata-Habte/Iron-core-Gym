@@ -1,4 +1,6 @@
 import PlanCard from '../components/plans/PlanCard'
+import '../styles/plan.css'
+
 
 const plans = [
     {
@@ -11,7 +13,6 @@ const plans = [
             'Open gym hours only',
             'Access to monthly member challenges',
         ],
-        backgroundImage: '/images/npng.jpg',
     },
     {
         title: 'PRO - Level Up',
@@ -23,7 +24,6 @@ const plans = [
             '1 personal training session per month',
             'Nutrition guidance starter pack',
         ],
-        backgroundImage: '/images/p1.png',
     },
     {
         title: 'TRAINER+ - All in',
@@ -35,13 +35,12 @@ const plans = [
             'Custom workout & meal plan',
             'Body composition analysis every month',
         ],
-        backgroundImage: '/images/p3.jpg',
     },
 ]
 
 export default function PlansPage() {
     return (
-        <section className="flex flex-wrap justify-evenly items-center px-2 pt-8">
+        <section className="main">
             {plans.map((plan) => (
                 <PlanCard key={plan.title} {...plan} />
             ))}

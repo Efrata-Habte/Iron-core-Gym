@@ -15,65 +15,50 @@ export default function Header() {
     const { isDark } = useTheme()
 
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between h-[99px] px-[min(4%,8rem)] gap-5 overflow-hidden">
-            {/* Logo */}
+        <header>
             <div className="logo-container">
                 <img
-                    className="w-48 h-auto"
+                    className="logo"
                     src={isDark ? '/logos/IC-LOGO-VEC-header.svg' : '/logos/header-logo-black.png'}
                     alt="Iron Core logo"
                 />
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center justify-between bg-[#382222] text-white py-3 px-8 border border-[#C00000] rounded-[2.8rem] w-[80%] h-[57px]">
-                {navLinks.map((link, index) => (
+            <nav>
+                {navLinks.map((link) => (
                     <NavLink
                         key={link.to}
                         to={link.to}
-                        className={({ isActive }) =>
-                            `block py-1.5 px-1.5 text-white no-underline transition-all duration-300 ${isActive ? 'border-b-[3px] border-[var(--color-ic-red)]' : ''
-                            }`
-                        }
-                        style={{
-                            animation: `fade-in 0.7s ease-out ${index * 0.1}s forwards`,
-                            opacity: 0,
-                        }}
+                        className={({ isActive }) => (isActive ? 'curr' : '')}
                     >
                         {link.label}
                     </NavLink>
                 ))}
+                {/* Helper for fade animation in original css? 
+            Original CSS says: nav * { animation: fadeIn ... }
+        */}
             </nav>
 
-            {/* Mobile Menu Button */}
-            <button
-                className="md:hidden p-2 cursor-pointer bg-transparent border-none"
-                onClick={() => setIsMenuOpen(true)}
-                aria-label="Open menu"
-            >
-                <Menu size={28} className="text-current" />
-            </button>
+            {/* Mobile Menu Button - original CSS uses .menu class which is display:none on desktop */}
+            <div className="menu block md:hidden" onClick={() => setIsMenuOpen(true)}>
+                <Menu size={28} className="text-current cursor-pointer" />
+            </div>
 
-            {/* Mobile Navigation Overlay */}
+            {/* Mobile Navigation */}
             {isMenuOpen && (
-                <nav className="fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center gap-8 md:hidden">
-                    <button
-                        className="absolute top-6 right-6 cursor-pointer bg-transparent border-none"
-                        onClick={() => setIsMenuOpen(false)}
-                        aria-label="Close menu"
-                    >
-                        <X size={32} className="text-white" />
-                    </button>
+                <nav className="narrow">
+                    <div className="narrow-top">
+                        {/* Original design likely had a close button here or outside */}
+                        <X size={32} className="cursor-pointer" onClick={() => setIsMenuOpen(false)} />
+                    </div>
 
                     {navLinks.map((link) => (
                         <NavLink
                             key={link.to}
                             to={link.to}
                             onClick={() => setIsMenuOpen(false)}
-                            className={({ isActive }) =>
-                                `text-2xl text-white no-underline py-2 px-4 ${isActive ? 'border-b-[3px] border-[var(--color-ic-red)]' : ''
-                                }`
-                            }
+                            className={({ isActive }) => (isActive ? 'curr' : '')}
                         >
                             {link.label}
                         </NavLink>

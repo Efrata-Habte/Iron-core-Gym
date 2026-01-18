@@ -5,28 +5,38 @@ export default function InputField({
     placeholder,
     icon: Icon,
     required = false,
-    options = null, // For select inputs
+    options = null,
     maxLength,
     className = ''
 }) {
-    const inputBaseClass = 'w-full py-1 px-2 bg-transparent border-b border-current focus:outline-none focus:border-b-2'
+    // form.css expectation:
+    // label (block)
+    // .input-box (flex) -> svg, input/select/textarea
+    // 
+    // note: textarea might not be inside .input-box in original HTML if icon isn't involved, 
+    // but form.css styles textarea globally.
+    // Let's assume structure:
+    // <div>
+    //   <label>...</label>
+    //   <div class="input-box">
+    //      <Icon />
+    //      <input/select/textarea />
+    //   </div>
+    // </div>
 
     return (
-        <div className={`input-container ${className}`}>
-            <label htmlFor={name} className="block pb-1.5">
+        <div className={className}>
+            <label htmlFor={name}>
                 {label}{required && '*'}
             </label>
-            <div className="flex items-center gap-2">
-                {Icon && <Icon size={24} className="flex-shrink-0" />}
+
+            <div className="input-box">
+                {Icon && <Icon strokeWidth={1.5} />}
 
                 {options ? (
-                    <select
-                        name={name}
-                        id={name}
-                        className="w-full py-1 px-2 bg-transparent border border-dashed border-[var(--color-border)] text-current"
-                    >
+                    <select name={name} id={name}>
                         {options.map(opt => (
-                            <option key={opt.value} value={opt.value} className="bg-[var(--color-ic-dark-bg)]">
+                            <option key={opt.value} value={opt.value}>
                                 {opt.label}
                             </option>
                         ))}
@@ -36,7 +46,6 @@ export default function InputField({
                         name={name}
                         id={name}
                         placeholder={placeholder}
-                        className="w-full h-24 py-1 px-2 bg-transparent border border-current rounded-lg resize-none"
                     />
                 ) : (
                     <input
@@ -45,7 +54,6 @@ export default function InputField({
                         name={name}
                         placeholder={placeholder}
                         maxLength={maxLength}
-                        className={inputBaseClass}
                     />
                 )}
             </div>

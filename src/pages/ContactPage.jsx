@@ -4,24 +4,21 @@ import InputField from '../components/ui/InputField'
 import Button from '../components/ui/Button'
 import FloatingBall from '../components/ui/FloatingBall'
 
+
 export default function ContactPage() {
     const handleSubmit = (e) => {
         e.preventDefault()
-        // Form submission logic will be added with backend
-        alert('Message sent! (Backend integration pending)')
+        alert('Message sent!')
     }
 
     return (
-        <section className="relative flex justify-center items-center py-16">
-            <form
-                onSubmit={handleSubmit}
-                className="relative z-10 flex flex-col gap-4 p-8 rounded-2xl border border-gray-500/40 bg-gradient-to-br from-gray-500/40 to-transparent backdrop-blur-lg max-w-md w-full mx-4"
-            >
-                <h1 className="text-3xl text-center !mb-0 [&::before]:hidden">
+        <section className="main contact">
+            <form onSubmit={handleSubmit}>
+                <h1>
                     Contact <span className="red-text">us</span>
                 </h1>
 
-                <hr className="border-0 border-b border-[var(--color-border)] my-2" />
+                <hr />
 
                 <InputField
                     label="Full name"
@@ -40,11 +37,9 @@ export default function ContactPage() {
                     required
                 />
 
-                <p className="text-sm">
+                <p style={{ fontSize: '0.9rem', color: 'var(--font-color-dim)' }}>
                     Are you a member?{' '}
-                    <Link to="/plans" className="red-text underline underline-offset-2">
-                        Get membership.
-                    </Link>
+                    <Link to="/plans">Get membership.</Link>
                 </p>
 
                 <InputField
@@ -55,14 +50,13 @@ export default function ContactPage() {
                     required
                 />
 
-                <Button type="submit" variant="full" className="mt-5">
-                    Submit
-                </Button>
+                <Button type="submit" className="submit">Submit</Button>
             </form>
 
-            {/* Floating Balls */}
+            {/* Balls using vanilla classes */}
             <FloatingBall color="black" size={260} top="15%" left="10%" />
             <FloatingBall color="red" size={280} bottom="10%" right="10%" />
+
         </section>
     )
 }

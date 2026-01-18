@@ -1,3 +1,4 @@
+import '../styles/index.css'
 import Hero from '../components/home/Hero'
 import WithUs from '../components/home/WithUs'
 import TrainersSection from '../components/home/TrainersSection'

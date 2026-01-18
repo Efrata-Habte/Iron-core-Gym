@@ -1,5 +1,5 @@
-export default function FloatingBall({ color = 'red', size = 100, top, bottom, left, right, className = '' }) {
-    const colorClass = color === 'red' ? 'ball-red' : 'ball-black'
+export default function FloatingBall({ color = 'red', size = 100, top, bottom, left, right, zIndex, className = '' }) {
+    const colorClass = color === 'red' ? 'red' : 'black'
 
     const style = {
         width: `${size}px`,
@@ -8,6 +8,7 @@ export default function FloatingBall({ color = 'red', size = 100, top, bottom, l
         bottom: bottom,
         left: left,
         right: right,
+        zIndex: zIndex,
     }
 
     return (
@@ -17,3 +18,4 @@ export default function FloatingBall({ color = 'red', size = 100, top, bottom, l
         />
     )
 }
+

@@ -3,6 +3,7 @@ import InputField from '../components/ui/InputField'
 import Button from '../components/ui/Button'
 import FloatingBall from '../components/ui/FloatingBall'
 
+
 const paymentOptions = [
     { value: 'telebirr', label: 'Telebirr' },
     { value: 'mobile', label: 'Mobile Banking' },
@@ -12,21 +13,17 @@ const paymentOptions = [
 export default function RegisterPage() {
     const handleSubmit = (e) => {
         e.preventDefault()
-        // Form submission logic will be added with backend
-        alert('Registration submitted! (Backend integration pending)')
+        alert('Registration submitted!')
     }
 
     return (
-        <section className="relative flex justify-center items-center py-8">
-            <form
-                onSubmit={handleSubmit}
-                className="relative z-10 flex flex-col gap-4 p-8 rounded-2xl border border-gray-500/40 bg-gradient-to-br from-gray-500/40 to-transparent backdrop-blur-lg max-w-md w-full mx-4"
-            >
-                <h1 className="text-3xl text-center !mb-0 [&::before]:hidden">
+        <section className="main form-section">
+            <form onSubmit={handleSubmit}>
+                <h1>
                     Member<span className="red-text">ship</span>
                 </h1>
 
-                <hr className="border-0 border-b border-[var(--color-border)] my-2" />
+                <hr />
 
                 <InputField
                     label="Full name"
@@ -80,14 +77,12 @@ export default function RegisterPage() {
                     required
                 />
 
-                <Button type="submit" variant="full" className="mt-5">
-                    Submit
-                </Button>
+                <Button type="submit" className="submit">Submit</Button>
             </form>
 
-            {/* Floating Balls */}
             <FloatingBall color="red" size={260} top="15%" left="10%" />
             <FloatingBall color="black" size={280} bottom="-5%" right="-10%" />
+
         </section>
     )
 }
