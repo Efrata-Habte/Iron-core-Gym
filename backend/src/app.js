@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
     res.send('Gym API is running...');
 });
 
-// Error Handler (to be added)
-// app.use(require('./middleware/errorHandler'));
+// Error Handler
+app.use(require('./middleware/errorHandler'));
 
 module.exports = app;
