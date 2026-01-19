@@ -5,10 +5,25 @@ import Button from '../components/ui/Button'
 import FloatingBall from '../components/ui/FloatingBall'
 
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 export default function ContactPage() {
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        alert('Message sent!')
+        const formData = new FormData(e.target)
+        const data = Object.fromEntries(formData.entries())
+
+        try {
+            const res = await fetch(`${API_URL}/contact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            if (res.ok) alert('Message sent successfully!')
+            else alert('Failed to send message.')
+        } catch (err) {
+            alert('Error connecting to the server.')
+        }
     }
 
     return (

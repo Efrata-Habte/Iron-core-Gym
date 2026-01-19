@@ -10,10 +10,25 @@ const paymentOptions = [
     { value: 'paypal', label: 'Paypal' },
 ]
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 export default function RegisterPage() {
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        alert('Registration submitted!')
+        const formData = new FormData(e.target)
+        const data = Object.fromEntries(formData.entries())
+
+        try {
+            const res = await fetch(`${API_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            if (res.ok) alert('Registration submitted!')
+            else alert('Registration failed.')
+        } catch (err) {
+            alert('Error connecting to the server.')
+        }
     }
 
     return (

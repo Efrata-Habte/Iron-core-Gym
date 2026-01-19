@@ -1,8 +1,7 @@
-import '../styles/index.css'
 import Hero from '../components/home/Hero'
 import WithUs from '../components/home/WithUs'
 import TrainersSection from '../components/home/TrainersSection'
-import StoreCTA from '../components/home/StoreCTA'
+import Chatbot from '../components/home/Chatbot'
 
 export default function HomePage() {
     return (
@@ -10,7 +9,7 @@ export default function HomePage() {
             <Hero />
             <WithUs />
             <TrainersSection />
-            <StoreCTA />
+            <Chatbot />
         </>
     )
 }

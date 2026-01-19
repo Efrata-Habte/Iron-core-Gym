@@ -4,40 +4,20 @@ import Button from '../ui/Button'
 import FloatingBall from '../ui/FloatingBall'
 
 
-const trainers = [
-    {
-        name: 'ADAMU ELIAS',
-        years: 9,
-        headline: 'YOU WANT IT?',
-        headlineAccent: 'WORK FOR IT!',
-        quote: "No one's handing you strength. No one's giving you discipline. It's earned with every drop of sweat —",
-        image: '/images/trainer-adamu-11.PNG',
-        position: 'right',
-        className: 'first'
-    },
-    {
-        name: 'RUTH ASHENAFI',
-        years: 7,
-        headline: 'SWEAT NOW.',
-        headlineAccent: 'SHINE LATER.',
-        quote: "Pain is permission to push harder. You're not broken — you're building.",
-        image: '/images/trainer-ruth-2.png',
-        position: 'left',
-        className: 'second'
-    },
-    {
-        name: 'STEVE GERARD',
-        years: 8,
-        headline: 'EARN YOUR',
-        headlineAccent: 'REST!',
-        quote: 'Go harder. Break your limits. Earn your rest — like a champion.',
-        image: '/images/trainer-steve-3.png',
-        position: 'right',
-        className: 'third'
-    },
-]
+import { useState, useEffect } from 'react'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function TrainersSection() {
+    const [trainers, setTrainers] = useState([])
+
+    useEffect(() => {
+        fetch(`${API_URL}/trainers`)
+            .then(res => res.json())
+            .then(data => setTrainers(data.slice(0, 3))) // Show only 3 on home page
+            .catch(err => console.error(err))
+    }, [])
+
     return (
         <section className="trainers-section">
             <SectionHeading centered>
