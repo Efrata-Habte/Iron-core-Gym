@@ -54,7 +54,8 @@ const trainers = [
         headlineAccent: 'WORK FOR IT!',
         quote: "No one's handing you strength. No one's giving you discipline. It's earned with every drop of sweat —",
         image: '/images/trainer-adamu-11.PNG',
-        position: 'right'
+        position: 'right',
+        isAvailable: true
     },
     {
         name: 'RUTH ASHENAFI',
@@ -63,7 +64,8 @@ const trainers = [
         headlineAccent: 'SHINE LATER.',
         quote: "Pain is permission to push harder. You're not broken — you're building.",
         image: '/images/trainer-ruth-2.png',
-        position: 'left'
+        position: 'left',
+        isAvailable: false
     },
     {
         name: 'STEVE GERARD',
@@ -72,18 +74,32 @@ const trainers = [
         headlineAccent: 'REST!',
         quote: 'Go harder. Break your limits. Earn your rest — like a champion.',
         image: '/images/trainer-steve-3.png',
-        position: 'right'
+        position: 'right',
+        isAvailable: true
     }
 ];
+
+const User = require('./src/models/User');
+
+const adminUser = {
+    name: 'Admin User',
+    email: 'admin@ironcore.com',
+    password: 'password123',
+    role: 'admin'
+};
 
 mongoose.connect(MONGO_URI)
     .then(async () => {
         console.log('Connected to MongoDB for seeding...');
         await Plan.deleteMany();
         await Trainer.deleteMany();
+        await User.deleteMany({ email: 'admin@ironcore.com' }); // Only delete admin if it exists
+
         await Plan.insertMany(plans);
         await Trainer.insertMany(trainers);
-        console.log('Database seeded successfully!');
+        await User.create(adminUser);
+
+        console.log('Database seeded successfully (including admin)!');
         process.exit();
     })
     .catch(err => {

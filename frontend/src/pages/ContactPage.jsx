@@ -3,11 +3,14 @@ import { User, Mail } from 'lucide-react'
 import InputField from '../components/ui/InputField'
 import Button from '../components/ui/Button'
 import FloatingBall from '../components/ui/FloatingBall'
-
+import { useNotification } from '../context/NotificationContext'
+import '../styles/form.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function ContactPage() {
+    const { addNotification } = useNotification();
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         const formData = new FormData(e.target)
@@ -19,10 +22,14 @@ export default function ContactPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
-            if (res.ok) alert('Message sent successfully!')
-            else alert('Failed to send message.')
+            if (res.ok) {
+                addNotification('Message sent successfully!', 'success');
+                e.target.reset();
+            } else {
+                addNotification('Failed to send message.', 'error');
+            }
         } catch (err) {
-            alert('Error connecting to the server.')
+            addNotification('Error connecting to the server.', 'error');
         }
     }
 
@@ -68,7 +75,6 @@ export default function ContactPage() {
                 <Button type="submit" className="submit">Submit</Button>
             </form>
 
-            {/* Balls using vanilla classes */}
             <FloatingBall color="black" size={260} top="15%" left="10%" />
             <FloatingBall color="red" size={280} bottom="10%" right="10%" />
 

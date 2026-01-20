@@ -24,6 +24,8 @@ app.use('/api/trainers', require('./routes/trainerRoutes'));
 app.use('/api/gallery', require('./routes/galleryRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/stats', require('./routes/statsRoutes'));
 
 app.get('/', (req, res) => {
     res.send('Gym API is running...');

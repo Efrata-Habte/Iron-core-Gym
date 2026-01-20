@@ -1,20 +1,28 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
-import { X, Menu } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { X, Menu, LogOut } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
+import { useAuth } from '../../context/AuthContext'
 
 const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/about', label: 'About' },
     { to: '/plans', label: 'Plans' },
     { to: '/trainers', label: 'Trainers' },
-    { to: '/gallery', label: 'Gallery' },
     { to: '/contact', label: 'Contact us' },
 ]
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const { isDark } = useTheme()
+    const { user, logout } = useAuth()
+    const navigate = useNavigate()
+
+    const handleLogout = () => {
+        logout()
+        setIsMenuOpen(false)
+        navigate('/')
+    }
 
     return (
         <header>
@@ -37,12 +45,26 @@ export default function Header() {
                         {link.label}
                     </NavLink>
                 ))}
-                {/* Helper for fade animation in original css? 
-            Original CSS says: nav * { animation: fadeIn ... }
-        */}
+
+                {user ? (
+                    <>
+                        {user.role === 'admin' && (
+                            <NavLink to="/admin" className={({ isActive }) => (isActive ? 'curr' : '')}>
+                                Admin
+                            </NavLink>
+                        )}
+                        <button onClick={handleLogout} className="logout-btn">
+                            <LogOut size={20} />
+                        </button>
+                    </>
+                ) : (
+                    <NavLink to="/login" className={({ isActive }) => (isActive ? 'curr' : '')}>
+                        Login
+                    </NavLink>
+                )}
             </nav>
 
-            {/* Mobile Menu Button - original CSS uses .menu class which is display:none on desktop */}
+            {/* Mobile Menu Button */}
             <div className="menu block md:hidden" onClick={() => setIsMenuOpen(true)}>
                 <Menu size={28} className="text-current cursor-pointer" />
             </div>
@@ -51,7 +73,6 @@ export default function Header() {
             {isMenuOpen && (
                 <nav className="narrow">
                     <div className="narrow-top">
-                        {/* Original design likely had a close button here or outside */}
                         <X size={32} className="cursor-pointer" onClick={() => setIsMenuOpen(false)} />
                     </div>
 
@@ -65,6 +86,33 @@ export default function Header() {
                             {link.label}
                         </NavLink>
                     ))}
+
+                    <hr style={{ width: '80%', margin: '1rem 0', opacity: 0.2 }} />
+
+                    {user ? (
+                        <>
+                            {user.role === 'admin' && (
+                                <NavLink
+                                    to="/admin"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={({ isActive }) => (isActive ? 'curr' : '')}
+                                >
+                                    Admin Panel
+                                </NavLink>
+                            )}
+                            <button onClick={handleLogout} className="mobile-logout">
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        <NavLink
+                            to="/login"
+                            onClick={() => setIsMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'curr' : '')}
+                        >
+                            Login
+                        </NavLink>
+                    )}
                 </nav>
             )}
         </header>

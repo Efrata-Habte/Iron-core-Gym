@@ -7,7 +7,8 @@ const trainerSchema = new mongoose.Schema({
     headlineAccent: { type: String },
     quote: { type: String },
     image: { type: String }, // Path to image file
-    position: { type: String, enum: ['left', 'right'], default: 'right' }
+    position: { type: String, enum: ['left', 'right'], default: 'right' },
+    isAvailable: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model('Trainer', trainerSchema);

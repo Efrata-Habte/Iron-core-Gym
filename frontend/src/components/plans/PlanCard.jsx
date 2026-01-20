@@ -35,7 +35,7 @@ export default function PlanCard({
                     ))}
                 </ul>
 
-                <Button to="/register">Get membership</Button>
+                <Button to={`/register?plan=${encodeURIComponent(title)}`}>Get membership</Button>
             </div>
         </div>
     )
