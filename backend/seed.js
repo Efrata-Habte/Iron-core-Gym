@@ -18,7 +18,8 @@ const plans = [
             'Open gym hours only',
             'Access to monthly member challenges',
         ],
-        badge: 'basic'
+        badge: 'basic',
+        priceNumeric: 1999
     },
     {
         title: 'PRO - Level Up',
@@ -30,7 +31,8 @@ const plans = [
             '1 personal training session per month',
             'Nutrition guidance starter pack',
         ],
-        badge: 'pro'
+        badge: 'pro',
+        priceNumeric: 3999
     },
     {
         title: 'TRAINER+ - All in',
@@ -42,7 +44,8 @@ const plans = [
             'Custom workout & meal plan',
             'Body composition analysis every month',
         ],
-        badge: 'plus'
+        badge: 'plus',
+        priceNumeric: 6999
     }
 ];
 
@@ -55,27 +58,33 @@ const trainers = [
         quote: "No one's handing you strength. No one's giving you discipline. It's earned with every drop of sweat —",
         image: '/images/trainer-adamu-11.PNG',
         position: 'right',
+        maxTrainees: 5,
+        currentTrainees: 0,
         isAvailable: true
     },
     {
         name: 'RUTH ASHENAFI',
-        years: 7,
+        years: 8,
         headline: 'SWEAT NOW.',
         headlineAccent: 'SHINE LATER.',
         quote: "Pain is permission to push harder. You're not broken — you're building.",
         image: '/images/trainer-ruth-2.png',
         position: 'left',
-        isAvailable: false
+        maxTrainees: 5,
+        currentTrainees: 3,
+        isAvailable: true
     },
     {
         name: 'STEVE GERARD',
-        years: 8,
+        years: 7,
         headline: 'EARN YOUR',
         headlineAccent: 'REST!',
         quote: 'Go harder. Break your limits. Earn your rest — like a champion.',
         image: '/images/trainer-steve-3.png',
         position: 'right',
-        isAvailable: true
+        maxTrainees: 5,
+        currentTrainees: 5,
+        isAvailable: false
     }
 ];
 
@@ -93,11 +102,17 @@ mongoose.connect(MONGO_URI)
         console.log('Connected to MongoDB for seeding...');
         await Plan.deleteMany();
         await Trainer.deleteMany();
-        await User.deleteMany({ email: 'admin@ironcore.com' }); // Only delete admin if it exists
+        await User.deleteMany({ email: { $in: ['admin@ironcore.com', 'mebitzeamanuel@gmail.com'] } }); // Clear both admins
 
         await Plan.insertMany(plans);
         await Trainer.insertMany(trainers);
         await User.create(adminUser);
+        await User.create({
+            name: 'Super Admin',
+            email: 'mebitzeamanuel@gmail.com',
+            password: 'password123',
+            role: 'admin'
+        });
 
         console.log('Database seeded successfully (including admin)!');
         process.exit();

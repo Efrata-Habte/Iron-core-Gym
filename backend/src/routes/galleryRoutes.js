@@ -15,7 +15,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const { protect, admin } = require('../middleware/authMiddleware');
+
 router.get('/', galleryController.getGalleryImages);
-router.post('/', upload.single('image'), galleryController.uploadImage);
+router.post('/', protect, upload.single('image'), galleryController.uploadImage);
+
+// Admin-only endpoints
+router.get('/pending', protect, admin, galleryController.getPendingImages);
+router.patch('/:id/approve', protect, admin, galleryController.approveImage);
+router.delete('/:id', protect, admin, galleryController.deleteImage);
 
 module.exports = router;

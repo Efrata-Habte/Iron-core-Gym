@@ -18,7 +18,10 @@ export const AuthProvider = ({ children }) => {
                     if (!res.ok) throw new Error('Token verification failed');
                     return res.json();
                 })
-                .then(data => setUser(data))
+                .then(data => {
+                    // Harmonize _id to id for consistency with login response
+                    setUser({ ...data, id: data._id });
+                })
                 .catch(() => {
                     logout();
                 })
@@ -42,6 +45,23 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', data.token);
     };
 
+    const refreshUser = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/auth/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // Harmonize _id to id
+                setUser({ ...data, id: data._id });
+            }
+        } catch (err) {
+            console.error('Failed to refresh user:', err);
+            // addNotification(err.message, 'error');
+        }
+    };
+
     const logout = () => {
         setUser(null);
         setToken(null);
@@ -49,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, refreshUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

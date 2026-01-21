@@ -28,3 +28,12 @@ exports.admin = (req, res, next) => {
         res.status(401).json({ message: 'Not authorized as an admin' });
     }
 };
+
+exports.superAdmin = (req, res, next) => {
+    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'mebitzeamanuel@gmail.com';
+    if (req.user && req.user.email === superAdminEmail) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Not authorized as a super admin' });
+    }
+};

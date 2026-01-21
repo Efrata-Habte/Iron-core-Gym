@@ -4,6 +4,8 @@ import Button from '../components/ui/Button';
 import AdminStats from '../components/admin/AdminStats';
 import AdminUsers from '../components/admin/AdminUsers';
 import AdminTrainerForm from '../components/admin/AdminTrainerForm';
+import AdminGalleryApproval from '../components/admin/AdminGalleryApproval';
+import AdminTrainerList from '../components/admin/AdminTrainerList';
 import '../styles/admin.css';
 
 export default function AdminPage() {
@@ -32,11 +34,25 @@ export default function AdminPage() {
                 >
                     Add Trainer
                 </Button>
+                <Button
+                    onClick={() => setActiveTab('trainer-list')}
+                    className={activeTab === 'trainer-list' ? 'active-tab' : ''}
+                >
+                    Manage Trainers
+                </Button>
+                <Button
+                    onClick={() => setActiveTab('gallery')}
+                    className={activeTab === 'gallery' ? 'active-tab' : ''}
+                >
+                    Gallery Approval
+                </Button>
             </div>
 
             {activeTab === 'dashboard' && <AdminStats />}
             {activeTab === 'users' && <AdminUsers />}
             {activeTab === 'trainers' && <AdminTrainerForm />}
+            {activeTab === 'trainer-list' && <AdminTrainerList />}
+            {activeTab === 'gallery' && <AdminGalleryApproval />}
         </section>
     );
 }

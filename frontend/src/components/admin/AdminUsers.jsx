@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import '../../styles/admin.css';
@@ -6,10 +6,13 @@ import '../../styles/admin.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function AdminUsers() {
-    const { token } = useAuth();
+    const { token, user: currentUser } = useAuth();
     const { addNotification } = useNotification();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const superAdminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'mebitzeamanuel@gmail.com';
+    const isSuperAdmin = useMemo(() => currentUser?.email === superAdminEmail, [currentUser, superAdminEmail]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -29,23 +32,16 @@ export default function AdminUsers() {
         if (token) fetchUsers();
     }, [token, addNotification]);
 
-    const handleUserUpdate = async (userId, currentStatus) => {
-        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const handleToggleAdmin = async (userId) => {
         try {
-            const res = await fetch(`${API_URL}/users/${userId}`, {
+            const res = await fetch(`${API_URL}/users/${userId}/toggle-admin`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ membershipStatus: newStatus })
+                headers: { Authorization: `Bearer ${token}` }
             });
-
-            if (!res.ok) throw new Error('Failed to update user');
-
-            const updatedUser = await res.json();
-            setUsers(prev => prev.map(u => u._id === userId ? updatedUser : u));
-            addNotification(`User marked as ${newStatus}`, 'success');
+            if (!res.ok) throw new Error('Failed to update admin status');
+            const data = await res.json();
+            setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: data.user.role } : u));
+            addNotification(data.message, 'success');
         } catch (err) {
             addNotification(err.message, 'error');
         }
@@ -85,14 +81,42 @@ export default function AdminUsers() {
                                 </span>
                             </td>
                             <td>
-                                {user.role !== 'admin' && (
-                                    <button
-                                        className="toggle-btn"
-                                        onClick={() => handleUserUpdate(user._id, user.membershipStatus)}
-                                    >
-                                        Toggle Paid
-                                    </button>
-                                )}
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    {/* Everyone can toggle paid status for members */}
+                                    {user.role !== 'admin' && (
+                                        <button
+                                            className="toggle-btn"
+                                            onClick={() => {
+                                                const newStatus = user.membershipStatus === 'active' ? 'inactive' : 'active';
+                                                fetch(`${API_URL}/users/${user._id}`, {
+                                                    method: 'PATCH',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        Authorization: `Bearer ${token}`
+                                                    },
+                                                    body: JSON.stringify({ membershipStatus: newStatus })
+                                                }).then(res => res.json())
+                                                    .then(updated => {
+                                                        setUsers(prev => prev.map(u => u._id === user._id ? updated : u));
+                                                        addNotification('Status updated', 'success');
+                                                    });
+                                            }}
+                                        >
+                                            Toggle Paid
+                                        </button>
+                                    )}
+
+                                    {/* Super Admin can toggle Admin role */}
+                                    {isSuperAdmin && user.email !== superAdminEmail && (
+                                        <button
+                                            className="toggle-btn admin-toggle"
+                                            onClick={() => handleToggleAdmin(user._id)}
+                                            style={{ backgroundColor: user.role === 'admin' ? '#e74c3c' : '#2ecc71' }}
+                                        >
+                                            {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
+                                        </button>
+                                    )}
+                                </div>
                             </td>
                         </tr>
                     ))}

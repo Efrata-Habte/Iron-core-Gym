@@ -14,7 +14,7 @@ import AdminPage from './pages/AdminPage'
 const AdminRoute = ({ children }) => {
     const { user, loading } = useAuth();
     if (loading) return <div>Loading...</div>;
-    return user && user.role === 'admin' ? children : <Navigate to="/login" />;
+    return user && user.role === 'admin' ? children : <Navigate to='/' />;
 };
 
 function App() {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import InputField from '../components/ui/InputField';
 import Button from '../components/ui/Button';
@@ -10,6 +11,7 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { login } = useAuth();
+    const { addNotification } = useNotification();
     const navigate = useNavigate();
     const [error, setError] = useState('');
 
@@ -17,9 +19,11 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             await login(email, password);
+            addNotification('Login successful!', 'success');
             navigate('/admin');
         } catch (err) {
             setError(err.message);
+            addNotification(err.message, 'error');
         }
     };
 

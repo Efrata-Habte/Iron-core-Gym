@@ -8,7 +8,9 @@ const trainerSchema = new mongoose.Schema({
     quote: { type: String },
     image: { type: String }, // Path to image file
     position: { type: String, enum: ['left', 'right'], default: 'right' },
-    isAvailable: { type: Boolean, default: true }
+    isAvailable: { type: Boolean, default: true },
+    maxTrainees: { type: Number, default: 5 },
+    currentTrainees: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('Trainer', trainerSchema);

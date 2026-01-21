@@ -10,10 +10,10 @@ const userSchema = new mongoose.Schema({
     membershipStatus: { type: String, enum: ['active', 'inactive', 'pending'], default: 'pending' },
     phone: { type: String },
     paymentMethod: { type: String },
+    assignedTrainer: { type: mongoose.Schema.Types.ObjectId, ref: 'Trainer' },
     createdAt: { type: Date, default: Date.now }
 });
 
-// Hash password before saving
 // Hash password before saving
 userSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
@@ -22,7 +22,9 @@ userSchema.pre('save', async function () {
 
 // Compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    if (!isMatch) console.log(`[AUTH] Password mismatch for: ${this.email}`);
+    return isMatch;
 };
 
 module.exports = mongoose.model('User', userSchema);

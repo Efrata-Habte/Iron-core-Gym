@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react'
 import SectionHeading from '../ui/SectionHeading'
-import { Download } from 'lucide-react'
+import { Download, Upload, Plus, X } from 'lucide-react'
 import { useNotification } from '../../context/NotificationContext'
+import { useAuth } from '../../context/AuthContext'
+import Button from '../ui/Button'
+import InputField from '../ui/InputField'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Gallery() {
+    const { user, token } = useAuth();
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const { addNotification } = useNotification();
 
-    useEffect(() => {
+    // Upload state
+    const [showUpload, setShowUpload] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [title, setTitle] = useState('');
+    const [file, setFile] = useState(null);
+
+    const fetchImages = () => {
+        setLoading(true);
         fetch(`${API_URL}/gallery`)
             .then(res => res.json())
             .then(data => {
@@ -19,12 +30,46 @@ export default function Gallery() {
                     addNotification('Failed to fetch gallery images', 'error');
                     return;
                 }
-                const imgUrls = data.map(img => img.imageUrl ? `${API_URL.replace('/api', '')}${img.imageUrl}` : img);
+                const imgUrls = data.map(img => img.image ? `${API_URL.replace('/api', '')}${img.image}` : img);
                 setImages(imgUrls);
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchImages();
     }, []);
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        if (!file) return;
+        setUploading(true);
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('title', title);
+
+        try {
+            const res = await fetch(`${API_URL}/gallery`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!res.ok) throw new Error('Upload failed');
+
+            addNotification(user.role === 'admin' ? 'Image uploaded!' : 'Image submitted for approval!', 'success');
+            setShowUpload(false);
+            setTitle('');
+            setFile(null);
+            if (user.role === 'admin') fetchImages();
+        } catch (err) {
+            addNotification(err.message, 'error');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const downloadImage = async (url) => {
         try {
@@ -56,6 +101,41 @@ export default function Gallery() {
             <p className="gallery-desc">
                 Become inspired by <span className="red-text">our collection.</span>
             </p>
+
+            {user && (
+                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                    <Button onClick={() => setShowUpload(!showUpload)} icon={showUpload ? X : Plus}>
+                        {showUpload ? 'Cancel Upload' : 'Share Your Progress'}
+                    </Button>
+                </div>
+            )}
+
+            {showUpload && (
+                <div className="glass upload-form" style={{ maxWidth: '500px', margin: '0 auto 4rem', padding: '2rem' }}>
+                    <h3 style={{ color: 'white', marginBottom: '1.5rem', textAlign: 'center' }}>Upload Image</h3>
+                    <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <InputField
+                            label="Image Title"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="e.g. My Transformation"
+                        />
+                        <div className="file-input-group">
+                            <label style={{ color: 'white', display: 'block', marginBottom: '0.5rem' }}>Select Image*</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={e => setFile(e.target.files[0])}
+                                required
+                                style={{ color: 'white' }}
+                            />
+                        </div>
+                        <Button type="submit" disabled={uploading}>
+                            {uploading ? 'Uploading...' : 'Submit Image'}
+                        </Button>
+                    </form>
+                </div>
+            )}
 
             <div className="gallery">
                 {loading ? (

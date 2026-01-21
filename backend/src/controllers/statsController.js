@@ -4,11 +4,14 @@ const Trainer = require('../models/Trainer');
 exports.getStats = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
-        const activeMembers = await User.countDocuments({ membershipStatus: 'active' });
-        // Simple revenue estimation: active members * $50
-        const revenue = activeMembers * 50;
+        const activeMembers = await User.find({ membershipStatus: 'active' }).populate('membershipPlan');
 
-        res.json({ totalUsers, activeMembers, revenue });
+        // Sum the prices from each active member's plan
+        const revenue = activeMembers.reduce((acc, member) => {
+            return acc + (member.membershipPlan ? member.membershipPlan.priceNumeric : 0);
+        }, 0);
+
+        res.json({ totalUsers, activeMembers: activeMembers.length, revenue });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

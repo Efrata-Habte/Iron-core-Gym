@@ -44,8 +44,10 @@ export default function RegisterPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
-            if (res.ok) addNotification('Registration submitted!', 'success');
-            else {
+            if (res.ok) {
+                addNotification('Registration successful! Please login.', 'success');
+                navigate('/login');
+            } else {
                 const err = await res.json();
                 console.log('Registration failed', err)
                 addNotification('Registration failed.', 'error');
@@ -96,8 +98,7 @@ export default function RegisterPage() {
                     label="Password"
                     name="password"
                     type="password"
-                    placeholder="6 characters max"
-                    maxLength={6}
+                    placeholder="Enter your password"
                     icon={Lock}
                     required
                 />
@@ -113,7 +114,7 @@ export default function RegisterPage() {
 
                 <InputField
                     label="Payment method"
-                    name="pay-method"
+                    name="paymentMethod"
                     icon={CreditCard}
                     options={paymentOptions}
                     required
