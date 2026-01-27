@@ -5,6 +5,7 @@ import { useNotification } from '../../context/NotificationContext'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../ui/Button'
 import InputField from '../ui/InputField'
+import ImageModal from '../ui/ImageModal'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -13,6 +14,9 @@ export default function Gallery() {
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const { addNotification } = useNotification();
+
+    // Lightbox state
+    const [selectedImage, setSelectedImage] = useState(null);
 
     // Upload state
     const [showUpload, setShowUpload] = useState(false);
@@ -59,11 +63,11 @@ export default function Gallery() {
 
             if (!res.ok) throw new Error('Upload failed');
 
-            addNotification(user.role === 'admin' ? 'Image uploaded!' : 'Image submitted for approval!', 'success');
+            addNotification((user.role === 'admin' || user.role === 'super-admin') ? 'Image uploaded!' : 'Image submitted for approval!', 'success');
             setShowUpload(false);
             setTitle('');
             setFile(null);
-            if (user.role === 'admin') fetchImages();
+            if (user.role === 'admin' || user.role === 'super-admin') fetchImages();
         } catch (err) {
             addNotification(err.message, 'error');
         } finally {
@@ -149,10 +153,12 @@ export default function Gallery() {
                                         src={src}
                                         alt="Gallery image"
                                         loading="lazy"
+                                        onClick={() => setSelectedImage({ src, title: 'Iron Core Gallery' })}
+                                        style={{ cursor: 'zoom-in' }}
                                     />
                                     <button
                                         className="download-btn"
-                                        onClick={() => downloadImage(src)}
+                                        onClick={(e) => { e.stopPropagation(); downloadImage(src); }}
                                         title="Download Image"
                                     >
                                         <Download size={20} />
@@ -165,6 +171,14 @@ export default function Gallery() {
                     <p style={{ color: 'var(--font-color-dim)', textAlign: 'center', width: '100%', gridColumn: '1/4', padding: '4rem 0' }}>No gallery images available yet.</p>
                 )}
             </div>
+
+            {selectedImage && (
+                <ImageModal
+                    imageSrc={selectedImage.src}
+                    title={selectedImage.title}
+                    onClose={() => setSelectedImage(null)}
+                />
+            )}
 
             <style>{`
                 .gallery-item-wrapper {

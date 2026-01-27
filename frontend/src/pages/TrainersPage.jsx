@@ -91,7 +91,7 @@ export default function TrainersPage() {
                                     <p className="capacity">Trainees: {trainer.currentTrainees} / {trainer.maxTrainees}</p>
                                     <p className="quote" style={{ marginBottom: '1.5rem' }}>"{trainer.quote}"</p>
 
-                                    {(!user || user.role !== 'admin') && (
+                                    {(!user || (user.role !== 'admin' && user.role !== 'super-admin')) && (
                                         <Button
                                             onClick={() => handleEnroll(trainer._id, trainer.name)}
                                             disabled={!canEnroll && !isEnrolledWithThisTrainer}
@@ -99,10 +99,10 @@ export default function TrainersPage() {
                                             style={{ width: '100%' }}
                                         >
                                             {user?.assignedTrainer
-                                                    ? 'Already Enrolled'
-                                                    : trainer.isAvailable
-                                                        ? 'Request Placement'
-                                                        : 'Trainer Full'
+                                                ? 'Already Enrolled'
+                                                : trainer.isAvailable
+                                                    ? 'Request Placement'
+                                                    : 'Trainer Full'
                                             }
                                         </Button>
                                     )}
@@ -116,6 +116,9 @@ export default function TrainersPage() {
             <style>{`
                 .trainers-page {
                     padding-bottom: 6rem;
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
                 }
                 .trainers-grid {
                     display: grid;

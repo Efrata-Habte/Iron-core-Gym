@@ -43,7 +43,7 @@ export default function AdminStats() {
             </div>
             <div className="glass stats-card">
                 <h3>Est. Revenue</h3>
-                <p className="stats-value stats-revenue">${stats.revenue}</p>
+                <p className="stats-value stats-revenue">{stats.revenue.toLocaleString()} Birr</p>
             </div>
         </div>
     );

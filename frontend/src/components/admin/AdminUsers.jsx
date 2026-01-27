@@ -11,8 +11,7 @@ export default function AdminUsers() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const superAdminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'mebitzeamanuel@gmail.com';
-    const isSuperAdmin = useMemo(() => currentUser?.email === superAdminEmail, [currentUser, superAdminEmail]);
+    const isSuperAdmin = useMemo(() => currentUser?.role === 'super-admin', [currentUser]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -83,7 +82,7 @@ export default function AdminUsers() {
                             <td>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     {/* Everyone can toggle paid status for members */}
-                                    {user.role !== 'admin' && (
+                                    {user.role !== 'admin' && user.role !== 'super-admin' && (
                                         <button
                                             className="toggle-btn"
                                             onClick={() => {
@@ -107,7 +106,7 @@ export default function AdminUsers() {
                                     )}
 
                                     {/* Super Admin can toggle Admin role */}
-                                    {isSuperAdmin && user.email !== superAdminEmail && (
+                                    {isSuperAdmin && user._id !== currentUser.id && (
                                         <button
                                             className="toggle-btn admin-toggle"
                                             onClick={() => handleToggleAdmin(user._id)}

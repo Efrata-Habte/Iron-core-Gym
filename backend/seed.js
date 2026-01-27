@@ -1,11 +1,15 @@
 const mongoose = require('mongoose');
 const Plan = require('./src/models/Plan');
 const Trainer = require('./src/models/Trainer');
+const User = require('./src/models/User');
+const GalleryImage = require('./src/models/GalleryImage');
+const WeeklyPlan = require('./src/models/WeeklyPlan');
 const dotenv = require('dotenv');
+const path = require('path');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/iron-core-gym';
+const MONGO_URI = process.env.MONGO_URI;
 
 const plans = [
     {
@@ -71,7 +75,7 @@ const trainers = [
         image: '/images/trainer-ruth-2.png',
         position: 'left',
         maxTrainees: 5,
-        currentTrainees: 3,
+        currentTrainees: 0,
         isAvailable: true
     },
     {
@@ -83,41 +87,41 @@ const trainers = [
         image: '/images/trainer-steve-3.png',
         position: 'right',
         maxTrainees: 5,
-        currentTrainees: 5,
-        isAvailable: false
+        currentTrainees: 0,
+        isAvailable: true
     }
 ];
 
-const User = require('./src/models/User');
-
-const adminUser = {
-    name: 'Admin User',
-    email: 'admin@ironcore.com',
-    password: 'password123',
-    role: 'admin'
-};
-
 mongoose.connect(MONGO_URI)
     .then(async () => {
-        console.log('Connected to MongoDB for seeding...');
-        await Plan.deleteMany();
-        await Trainer.deleteMany();
-        await User.deleteMany({ email: { $in: ['admin@ironcore.com', 'mebitzeamanuel@gmail.com'] } }); // Clear both admins
+        console.log('Connected to MongoDB for clean reset...');
 
+        // Clear all collections
+        await Promise.all([
+            Plan.deleteMany({}),
+            Trainer.deleteMany({}),
+            User.deleteMany({}),
+            GalleryImage.deleteMany({}),
+            WeeklyPlan.deleteMany({})
+        ]);
+        console.log('Cleared all collections.');
+
+        // Re-insert initial data
         await Plan.insertMany(plans);
         await Trainer.insertMany(trainers);
-        await User.create(adminUser);
+
+        // Create only the Super Admin
         await User.create({
             name: 'Super Admin',
             email: 'mebitzeamanuel@gmail.com',
             password: 'password123',
-            role: 'admin'
+            role: 'super-admin'
         });
 
-        console.log('Database seeded successfully (including admin)!');
+        console.log('Database reset to Day 1 state successfully!');
         process.exit();
     })
     .catch(err => {
-        console.error('Seeding error:', err);
+        console.error('Reset error:', err);
         process.exit(1);
     });

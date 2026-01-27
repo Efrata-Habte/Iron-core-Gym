@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import Button from '../ui/Button';
+import ImageModal from '../ui/ImageModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -10,6 +11,7 @@ export default function AdminGalleryApproval() {
     const { addNotification } = useNotification();
     const [pendingImages, setPendingImages] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchPending = async () => {
@@ -64,26 +66,39 @@ export default function AdminGalleryApproval() {
     if (loading) return <div className="loading-spinner"></div>;
 
     return (
-        <div className="admin-content-section">
-            <h3>Pending Gallery Uploads</h3>
+        <div className="gallery-approval-section">
+            <h3 style={{ marginBottom: '1.5rem' }}>Pending Gallery Uploads</h3>
             {pendingImages.length === 0 ? (
-                <p className="dim-text">No pending approvals.</p>
+                <div className="glass dim-text">No pending approvals.</div>
             ) : (
                 <div className="pending-grid">
                     {pendingImages.map(img => (
                         <div key={img._id} className="glass pending-card">
-                            <img src={`${API_URL.replace('/api', '')}${img.image}`} alt={img.title} />
+                            <img
+                                src={`${API_URL.replace('/api', '')}${img.image}`}
+                                alt={img.title}
+                                onClick={() => setSelectedImage({ src: `${API_URL.replace('/api', '')}${img.image}`, title: img.title })}
+                                style={{ cursor: 'zoom-in' }}
+                            />
                             <div className="pending-info">
                                 <h4>{img.title || 'Untitled'}</h4>
                                 <p>By: {img.uploadedBy?.name || 'Unknown'}</p>
                                 <div className="action-btns">
-                                    <Button onClick={() => handleApprove(img._id)}>Approve</Button>
-                                    <Button onClick={() => handleDelete(img._id)} variant="outline">Reject</Button>
+                                    <Button onClick={() => handleApprove(img._id)} style={{ width: '100%' }}>Approve</Button>
+                                    <Button onClick={() => handleDelete(img._id)} variant="outline" style={{ width: '100%' }}>Reject</Button>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+            )}
+
+            {selectedImage && (
+                <ImageModal
+                    imageSrc={selectedImage.src}
+                    title={selectedImage.title}
+                    onClose={() => setSelectedImage(null)}
+                />
             )}
         </div>
     );

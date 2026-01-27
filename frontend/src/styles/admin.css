@@ -122,3 +122,68 @@
         transform: rotate(360deg);
     }
 }
+
+/* Pending Gallery Approvals */
+.pending-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding-top: 1rem;
+}
+
+.pending-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    padding: 0 !important;
+    transition: transform 0.3s ease;
+}
+
+.pending-card:hover {
+    transform: translateY(-5px);
+}
+
+.pending-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.pending-info {
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex: 1;
+}
+
+.pending-info h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--main-font-color);
+}
+
+.pending-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--font-color-dim);
+}
+
+.action-btns {
+    margin-top: auto;
+    display: flex;
+    gap: 0.8rem;
+}
+
+.action-btns button {
+    flex: 1;
+    font-size: 0.9rem !important;
+    padding: 8px 0 !important;
+}
+
+.dim-text {
+    color: var(--font-color-dim);
+    text-align: center;
+    padding: 3rem;
+}

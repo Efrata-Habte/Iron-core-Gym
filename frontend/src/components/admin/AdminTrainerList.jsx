@@ -47,40 +47,38 @@ export default function AdminTrainerList() {
     if (loading) return <div className="loading-spinner"></div>;
 
     return (
-        <div className="admin-content-section">
-            <h3>Manage Trainers</h3>
-            <div className="trainer-list-table glass">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Experience</th>
-                            <th>Trainees</th>
-                            <th>Status</th>
-                            <th>Action</th>
+        <div className="users-table glass">
+            <h3 style={{ padding: '1rem 1rem 0', margin: 0 }}>Manage Trainers</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Experience</th>
+                        <th>Trainees</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {trainers.map(t => (
+                        <tr key={t._id}>
+                            <td>{t.name}</td>
+                            <td>{t.years} yrs</td>
+                            <td>{t.currentTrainees} / {t.maxTrainees}</td>
+                            <td>
+                                <span className={`status-badge ${t.isAvailable ? 'status-active' : 'status-inactive'}`}>
+                                    {t.isAvailable ? 'Available' : 'Unavailable'}
+                                </span>
+                            </td>
+                            <td>
+                                <Button onClick={() => handleDelete(t._id)} variant="outline" style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}>
+                                    Remove
+                                </Button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {trainers.map(t => (
-                            <tr key={t._id}>
-                                <td>{t.name}</td>
-                                <td>{t.years} yrs</td>
-                                <td>{t.currentTrainees} / {t.maxTrainees}</td>
-                                <td>
-                                    <span className={`status-badge ${t.isAvailable ? 'status-active' : 'status-inactive'}`}>
-                                        {t.isAvailable ? 'Available' : 'Unavailable'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <Button onClick={() => handleDelete(t._id)} variant="outline" style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}>
-                                        Remove
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }

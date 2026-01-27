@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { X, Menu, LogOut } from 'lucide-react'
+import { X, Menu, LogOut, User as UserIcon } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
+import ProfilePopup from '../ui/ProfilePopup'
 
 const navLinks = [
     { to: '/', label: 'Home' },
@@ -14,14 +15,21 @@ const navLinks = [
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [showProfile, setShowProfile] = useState(false)
     const { isDark } = useTheme()
-    const { user, logout } = useAuth()
+    const { user, logout, refreshUser } = useAuth()
     const navigate = useNavigate()
 
     const handleLogout = () => {
         logout()
         setIsMenuOpen(false)
         navigate('/')
+    }
+
+    const openProfile = () => {
+        refreshUser()
+        setShowProfile(true)
+        setIsMenuOpen(false)
     }
 
     return (
@@ -48,14 +56,19 @@ export default function Header() {
 
                 {user ? (
                     <>
-                        {user.role === 'admin' && (
+                        {(user.role === 'admin' || user.role === 'super-admin') && (
                             <NavLink to="/admin" className={({ isActive }) => (isActive ? 'curr' : '')}>
                                 Admin
                             </NavLink>
                         )}
-                        <button onClick={handleLogout} className="logout-btn">
-                            <LogOut size={20} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <button onClick={openProfile} className="logout-btn" title="View Profile">
+                                <UserIcon size={20} />
+                            </button>
+                            <button onClick={handleLogout} className="logout-btn" title="Logout">
+                                <LogOut size={20} />
+                            </button>
+                        </div>
                     </>
                 ) : (
                     <NavLink to="/login" className={({ isActive }) => (isActive ? 'curr' : '')}>
@@ -91,7 +104,7 @@ export default function Header() {
 
                     {user ? (
                         <>
-                            {user.role === 'admin' && (
+                            {(user.role === 'admin' || user.role === 'super-admin') && (
                                 <NavLink
                                     to="/admin"
                                     onClick={() => setIsMenuOpen(false)}
@@ -100,6 +113,9 @@ export default function Header() {
                                     Admin Panel
                                 </NavLink>
                             )}
+                            <button onClick={openProfile} className="mobile-logout" style={{ background: 'var(--primary-color)', marginBottom: '0.5rem' }}>
+                                My Profile
+                            </button>
                             <button onClick={handleLogout} className="mobile-logout">
                                 Logout
                             </button>
@@ -115,6 +131,11 @@ export default function Header() {
                     )}
                 </nav>
             )}
+
+            {showProfile && user && (
+                <ProfilePopup user={user} onClose={() => setShowProfile(false)} />
+            )}
         </header>
     )
 }
+
