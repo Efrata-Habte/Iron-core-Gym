@@ -1,10 +1,10 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('../core/Router');
+const router = new Router();
 const authController = require('../controllers/authController');
-const passport = require('passport');
+const { protect } = require('../middleware/authMiddleware');
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.get('/me', passport.authenticate('jwt', { session: false }), authController.getMe);
+router.get('/me', protect, authController.getMe);
 
 module.exports = router;

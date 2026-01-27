@@ -1,5 +1,5 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('../core/Router');
+const router = new Router();
 const contactController = require('../controllers/contactController');
 
 router.post('/', contactController.sendContactEmail);

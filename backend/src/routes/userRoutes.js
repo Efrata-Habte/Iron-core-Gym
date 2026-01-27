@@ -1,5 +1,5 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('../core/Router');
+const router = new Router();
 const userController = require('../controllers/userController');
 const { protect, admin, superAdmin } = require('../middleware/authMiddleware');
 
