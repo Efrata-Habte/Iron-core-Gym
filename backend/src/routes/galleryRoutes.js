@@ -1,5 +1,5 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('../core/Router');
+const router = new Router();
 const galleryController = require('../controllers/galleryController');
 const multer = require('multer');
 const path = require('path');
@@ -17,8 +17,18 @@ const upload = multer({ storage });
 
 const { protect, admin } = require('../middleware/authMiddleware');
 
+// Wrapper to make multer work as middleware
+const withUpload = (fieldName) => (req, res, next) => {
+    upload.single(fieldName)(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ message: 'File upload error: ' + err.message });
+        }
+        next();
+    });
+};
+
 router.get('/', galleryController.getGalleryImages);
-router.post('/', protect, upload.single('image'), galleryController.uploadImage);
+router.post('/', protect, withUpload('image'), galleryController.uploadImage);
 
 // Admin-only endpoints
 router.get('/pending', protect, admin, galleryController.getPendingImages);

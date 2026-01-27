@@ -1,37 +1,70 @@
-const express = require('express');
-const cors = require('cors');
-const passport = require('passport');
-const dotenv = require('dotenv');
+const { Router } = require('./core/Router');
+const { parseBody } = require('./core/requestHelpers');
+const { extendResponse } = require('./core/responseHelpers');
+const { corsHandler } = require('./core/corsHandler');
+const { createStaticHandler } = require('./core/staticHandler');
 
-dotenv.config();
+// Create main router
+const router = new Router();
 
-const app = express();
+// Static file handler for uploads
+const serveUploads = createStaticHandler('/uploads', 'public/uploads');
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
-require('./middleware/passport')(passport);
+// Mount all route modules
+router.use('/api/auth', require('./routes/authRoutes'));
+router.use('/api/plans', require('./routes/planRoutes'));
+router.use('/api/trainers', require('./routes/trainerRoutes'));
+router.use('/api/gallery', require('./routes/galleryRoutes'));
+router.use('/api/contact', require('./routes/contactRoutes'));
+router.use('/api/ai', require('./routes/aiRoutes'));
+router.use('/api/users', require('./routes/userRoutes'));
+router.use('/api/stats', require('./routes/statsRoutes'));
 
-// Static folder for uploads
-app.use('/uploads', express.static('public/uploads'));
-
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/plans', require('./routes/planRoutes'));
-app.use('/api/trainers', require('./routes/trainerRoutes'));
-app.use('/api/gallery', require('./routes/galleryRoutes'));
-app.use('/api/contact', require('./routes/contactRoutes'));
-app.use('/api/ai', require('./routes/aiRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/stats', require('./routes/statsRoutes'));
-
-app.get('/', (req, res) => {
+// Root route
+router.get('/', (req, res) => {
     res.send('Gym API is running...');
 });
 
-// Error Handler
-app.use(require('./middleware/errorHandler'));
+/**
+ * Main request handler for http.createServer
+ */
+async function requestHandler(req, res) {
+    try {
+        // Extend response with helper methods
+        extendResponse(res);
 
-module.exports = app;
+        // Handle CORS (returns true if it was a preflight OPTIONS request)
+        if (corsHandler(req, res)) {
+            return;
+        }
+
+        // Serve static files
+        if (serveUploads(req, res)) {
+            return;
+        }
+
+        // Parse request body for non-multipart requests
+        const contentType = req.headers['content-type'] || '';
+        if (!contentType.includes('multipart/form-data')) {
+            await parseBody(req);
+        }
+
+        // Try to match a route
+        const matched = await router.handle(req, res);
+
+        if (!matched && !res.writableEnded) {
+            // No route matched - 404
+            res.status(404).json({ message: 'Route not found' });
+        }
+    } catch (err) {
+        console.error('Request handler error:', err);
+        if (!res.writableEnded) {
+            res.status(500).json({
+                message: err.message,
+                stack: process.env.NODE_ENV === 'production' ? null : err.stack
+            });
+        }
+    }
+}
+
+module.exports = requestHandler;
