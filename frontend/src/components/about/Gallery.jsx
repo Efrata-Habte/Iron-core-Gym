@@ -36,6 +36,7 @@ export default function Gallery() {
                 }
                 const imgUrls = data.map(img => img.image ? `${API_URL.replace('/api', '')}${img.image}` : img);
                 setImages(imgUrls);
+                console.log(imgUrls);
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));

@@ -8,6 +8,42 @@ import '../styles/form.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+const getUserFriendlyErrorMessage = (backendError) => {
+    if (!backendError) return "An unexpected error occurred. Please try again later.";
+
+    // Normalize error for matching
+    const error = backendError.toLowerCase();
+
+    // Authentication Errors
+    if (error.includes("invalid login") || error.includes("535") || error.includes("username and password not accepted")) {
+        return "Email service authentication failed. Contact the system admin verify credentials.";
+    }
+
+    // Connection/Network Errors
+    if (error.includes("etimedout") || error.includes("timeout")) {
+        return "Connection timed out. Please check your internet and retry.";
+    }
+    if (error.includes("econnrefused")) {
+        return "Unable to connect to the email server. Service might be down.";
+    }
+    if (error.includes("enotfound") || error.includes("eai_again") || error.includes("dns")) {
+        return "Network error. Please check your internet connection.";
+    }
+
+    // Configuration Errors
+    if (error.includes("no recipients defined")) {
+        return "System configuration error. Recipient email missing.";
+    }
+
+    // Rate Limiting (Common with free SMTP)
+    if (error.includes("too many messages") || error.includes("limit exceed")) {
+        return "Traffic limit reached. Please try again in 15 minutes.";
+    }
+
+    // Fallback: Use the backend message if it's short/readable, otherwise generic
+    return "An unexpected error occurred. Please try again.";
+};
+
 export default function ContactPage() {
     const { addNotification } = useNotification();
 
@@ -22,14 +58,18 @@ export default function ContactPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
+
+            const result = await res.json();
+
             if (res.ok) {
                 addNotification('Message sent successfully!', 'success');
                 e.target.reset();
             } else {
-                addNotification('Failed to send message.', 'error');
+                const friendlyMessage = getUserFriendlyErrorMessage(result.message);
+                addNotification(friendlyMessage, 'error');
             }
         } catch (err) {
-            addNotification('Error connecting to the server.', 'error');
+            addNotification('Error connecting to the server. Check your connection.', 'error');
         }
     }
 
