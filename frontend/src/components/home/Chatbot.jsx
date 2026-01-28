@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNotification } from '../../context/NotificationContext'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Chatbot() {
+    const { addNotification } = useNotification();
     const [messages, setMessages] = useState([
         { role: 'ai', text: 'Hello! I am your Iron Core AI assistant. How can I help you with your fitness and nutrition today?' }
     ])
@@ -33,9 +35,29 @@ export default function Chatbot() {
                 body: JSON.stringify({ message: userMsg })
             })
             const data = await res.json()
-            setMessages(prev => [...prev, { role: 'ai', text: data.reply || 'Sorry, I couldn\'t get an answer.' }])
+
+            if (!res.ok) {
+                // Determine specific error for notification
+                let notificationError = 'An unexpected error occurred.';
+
+                if (data.message) {
+                    if (data.message.includes('404') || data.message.includes('not found')) {
+                        notificationError = 'System Error: AI Model not found or API Key invalid. Please check backend configuration.';
+                    } else if (data.message.includes('API key')) {
+                        notificationError = 'System Error: Invalid Gemini API Key.';
+                    } else {
+                        notificationError = `Error: ${data.message}`;
+                    }
+                }
+
+                addNotification(notificationError, 'error');
+                setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, I am having trouble thinking right now. Please try again later.' }]);
+            } else {
+                setMessages(prev => [...prev, { role: 'ai', text: data.reply || 'Sorry, I couldn\'t get an answer.' }])
+            }
         } catch (err) {
-            setMessages(prev => [...prev, { role: 'ai', text: 'Error connecting to the trainer. Please try again later.' }])
+            addNotification('Error connecting to the trainer. Check your internet connection.', 'error');
+            setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, I am having trouble connecting to the server.' }])
         } finally {
             setLoading(false)
         }
