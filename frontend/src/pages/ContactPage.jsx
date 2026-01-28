@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { User, Mail } from 'lucide-react'
+import { useState } from 'react'
 import InputField from '../components/ui/InputField'
 import Button from '../components/ui/Button'
 import FloatingBall from '../components/ui/FloatingBall'
@@ -46,9 +47,13 @@ const getUserFriendlyErrorMessage = (backendError) => {
 
 export default function ContactPage() {
     const { addNotification } = useNotification();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (isSubmitting) return;
+
+        setIsSubmitting(true);
         const formData = new FormData(e.target)
         const data = Object.fromEntries(formData.entries())
 
@@ -70,6 +75,8 @@ export default function ContactPage() {
             }
         } catch (err) {
             addNotification('Error connecting to the server. Check your connection.', 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -112,7 +119,14 @@ export default function ContactPage() {
                     required
                 />
 
-                <Button type="submit" className="submit">Submit</Button>
+                <Button
+                    type="submit"
+                    className="submit"
+                    disabled={isSubmitting}
+                    style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                    {isSubmitting ? 'Sending...' : 'Send'}
+                </Button>
             </form>
 
             <FloatingBall color="black" size={260} top="15%" left="10%" />
