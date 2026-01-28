@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Send } from 'lucide-react'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Chatbot() {
@@ -67,7 +68,9 @@ export default function Chatbot() {
                         placeholder="Ask me anything about fitness..."
                         disabled={loading}
                     />
-                    <button type="submit" disabled={loading}>Send</button>
+                    <button type="submit" disabled={loading} className="send-btn">
+                        <Send size={20} />
+                    </button>
                 </form>
             </div>
 
@@ -116,19 +119,48 @@ export default function Chatbot() {
                     border-bottom-left-radius: 0;
                 }
                 .chat-input-area {
+                    position: relative;
                     display: flex;
-                    gap: 0.5rem;
+                    align-items: center;
                 }
                 .chat-input-area input {
-                    flex: 1;
-                    padding: 0.8rem;
-                    background: none;
+                    width: 100%;
+                    padding: 1rem;
+                    padding-right: 3rem; /* Make room for the button */
+                    background: rgba(255, 255, 255, 0.05);
                     border: 1px solid var(--border-color);
-                    border-radius: 0.5rem;
+                    border-radius: 2rem; /* More rounded for chat feel */
                     color: white;
+                    outline: none;
+                    transition: border-color 0.3s;
                 }
-                .chat-input-area button {
-                    width: auto;
+                .chat-input-area input:focus {
+                    border-color: var(--primary-color);
+                }
+                .send-btn {
+                    position: absolute;
+                    right: 2.6rem; /* Space from the right edge */
+                    top: 50%;
+                    transform: translateY(-50%); /* Perfect vertical centering */
+                    background: none;
+                    border: none;
+                    color: var(--primary-color);
+                    cursor: pointer;
+                    padding: 0.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                    border-radius: 50%;
+                }
+                .send-btn:hover:not(:disabled) {
+                    background: var(--primary-color);
+                    color: white; /* Contrast text color */
+                    transform: translateY(-50%) scale(1.1); /* Keep centered while scaling */
+                }
+                .send-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
                 }
                 .loading {
                     font-style: italic;
