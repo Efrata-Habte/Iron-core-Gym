@@ -1,94 +1,95 @@
-# 10. Backend Core Deep Dive (The Engine)
+# 10. Backend Core Explained (The Engine)
 
-This project uses a **custom-built framework** instead of Express.js. This is fantastic for learning because it shows you exactly how web servers work "under the hood".
+This project is unique because we built our own mini-framework instead of using Express.js. This helps you understand how everything works "under the hood".
 
-All the "magic" happens in `backend/src/core/`.
+## 1. The Router (`core/Router.js`)
 
-## 1. `Router.js` (The Dispatcher)
-This file is responsible for deciding which function runs when a user visits a URL.
+**Concept**:
+Think of a railway switch. Trains (Requests) come in, and the switch decides which track (Controller) they go to.
 
-### How it works (Simplified Code)
+**The Code**:
 ```javascript
 class Router {
     constructor() {
-        this.routes = []; // We store all our rules here
+        this.routes = [];
     }
 
-    // When we say router.get('/users', func)...
-    addRoute(method, path, ...handlers) {
-        // We push { method: 'GET', path: '/users', handler: func } into the array
-        this.routes.push({ method, path, handlers });
+    addRoute(method, path, handler) {
+        // We just save the rule in a list
+        this.routes.push({ method, path, handler });
     }
 
-    // When a request comes in...
-    async handle(req, res) {
-        const method = req.method; // e.g., "GET"
-        const url = req.url;       // e.g., "/users"
-
-        // Loop through all stored routes
-        for (const route of this.routes) {
-            // If Method matches AND Path matches...
-            if (route.method === method && url === route.path) {
-                // Run the handler function!
-                await route.handlers[0](req, res);
-                return;
-            }
+    handle(req, res) {
+        // Find the right rule
+        const matched = this.routes.find(r => r.path === req.url);
+        if (matched) {
+            matched.handler(req, res); // Run the function!
         }
     }
 }
 ```
-*Note: The real file handles parameters like `/users/:id` using Regex matching, but this is the core idea.*
 
-## 2. `requestHelpers.js` (The Translator)
-Node.js receives data in "Chunks" (streams of binary data). Browsers send data as Strings. We need JavaScript Objects to work with them.
+**Breakdown**:
+-   `addRoute`: When we say `router.get('/users', getUser)`, we are adding a rule to the list.
+-   `handle`: When a user actually visits `/users`, this function searches the list. If it finds a match, it runs `getUser()`.
 
-### `parseBody(req)`
-This function listens to the data stream and builds the object.
+---
 
+## 2. Response Helpers (`core/responseHelpers.js`)
+
+**Concept**:
+Node.js is very raw. To send JSON, you have to write 3 lines of code every time. We wrote a helper to make it 1 line.
+
+**The Code**:
 ```javascript
-// Concept:
-let body = '';
-req.on('data', chunk => {
-    body += chunk.toString(); // "name=John"
-});
-req.on('end', () => {
-    // Convert string to Object
-    req.body = JSON.parse(body); // { name: "John" }
-});
+// BEFORE (Raw Node.js)
+res.setHeader('Content-Type', 'application/json');
+res.statusCode = 200;
+res.end(JSON.stringify({ message: 'Success' }));
+
+// AFTER (Our Helper)
+res.status(200).json({ message: 'Success' });
 ```
-Without this, `req.body` would be undefined!
 
-## 3. `responseHelpers.js` (The Decorator)
-Standard Node.js `res` objects are very basic. You have to write `res.setHeader('Content-Type', 'application/json')` every time. This helper adds shortcuts.
-
+**Implementation**:
 ```javascript
 function extendResponse(res) {
-    // We attach a new function .json() to the res object
     res.json = function(data) {
         this.setHeader('Content-Type', 'application/json');
-        this.end(JSON.stringify(data)); // Send the object as a string
-    };
-
-    // We attach .status()
-    res.status = function(code) {
-        this.statusCode = code;
-        return this; // Return self so we can chain: res.status(200).json(...)
+        this.end(JSON.stringify(data));
     };
 }
 ```
+We literally attach a new function `.json()` onto the `res` object so we can use it later.
 
-## 4. `corsHandler.js` (The Security Guard)
-Web browsers block "Cross-Origin" requests by default. If your Frontend is on `localhost:5173` and Backend on `localhost:5000`, the browser blocks it unless the backend says "It's okay".
+---
 
-This file adds the literal headers:
+## 3. Data Parsing (`core/requestHelpers.js`)
+
+**Concept**:
+When you upload a file or send a long text, it doesn't arrive all at once. It arrives in "Chunks" (packets). We need to glue them together.
+
+**The Code**:
 ```javascript
-res.setHeader('Access-Control-Allow-Origin', '*'); // "Anyone can talk to me"
-res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+const parseBody = (req) => new Promise((resolve) => {
+    let body = '';
+    
+    // Listen for packets
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+
+    // When finished
+    req.on('end', () => {
+        if (body) {
+            req.body = JSON.parse(body); // Turn string into Object
+        }
+        resolve();
+    });
+});
 ```
 
-## Summary
-In `app.js`, we use all these pieces together:
-1.  Enhance `res` with **responseHelpers**.
-2.  Run **corsHandler** to allow the browser.
-3.  Run **requestHelpers** to parse the body.
-4.  Ask **Router** to find the right Controller.
+**Breakdown**:
+-   `req.on('data')`: Runs every time a packet arrives.
+-   `req.on('end')`: Runs when the transfer is complete.
+-   `JSON.parse()`: Converts the raw text `{"name":"Bob"}` into the object `{ name: "Bob" }`.

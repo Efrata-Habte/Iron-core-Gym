@@ -1,65 +1,85 @@
-# 05. Trainers & Enrollment Deep Dive
+# 05. Trainers & Enrollment Explained
 
-This feature allows users to pick a trainer. The complexity here is **Capacity Management**. A trainer can only take 5 people.
+This feature shows how we handle **Business Logic**.
+The logic is: "You can only enroll if the trainer has space."
 
-## Controller Logic (`controllers/trainerController.js`)
+## 1. The Trainer Model (`models/Trainer.js`)
 
-### `enrollInTraining(req, res)`
-This function handles the "Enroll" button click.
+We need to track how many people are enrolled.
 
 ```javascript
+const TrainerSchema = new mongoose.Schema({
+    name: String,
+    maxTrainees: { type: Number, default: 5 }, // The Limit
+    currentTrainees: { type: Number, default: 0 }, // The Counter
+    isAvailable: { type: Boolean, default: true } // The Flag
+});
+```
+
+---
+
+## 2. Enrollment Logic (`controllers/trainerController.js`)
+
+This is the code that runs when you click "Enroll".
+
+**The English Explanation**:
+1.  Check if the Trainer exists.
+2.  Check if the Trainer is FULL (`current >= max`). If so, stop.
+3.  Check if the User already has a trainer. If so, stop.
+4.  If all good:
+    -   Tell the User "This is your trainer".
+    -   Tell the Trainer "You have +1 student".
+    -   Recalculate if the trainer is now full.
+
+**The Code**:
+```javascript
 exports.enrollInTraining = async (req, res) => {
-    // 1. Get IDs
-    const trainerId = req.params.id; // From URL: /api/trainers/enroll/123
-    const userId = req.user.id;      // From Token (via protect middleware)
+    // 1. Get the Data
+    const trainerId = req.params.id; // URL: /api/trainers/enroll/123
+    const userId = req.user.id;      // From the Token
 
-    // 2. Find Trainer
+    // 2. Fetch from DB
     const trainer = await Trainer.findById(trainerId);
-    if (!trainer) return res.status(404).json({ message: 'Trainer not found' });
-
-    // 3. CHECK CAPACITY (Business Logic)
-    if (trainer.currentTrainees >= trainer.maxTrainees) {
-        // If full, stop immediately!
-        return res.status(400).json({ message: 'Trainer is full!' });
-    }
-
-    // 4. Find User & Check if already enrolled
     const user = await User.findById(userId);
-    if (user.assignedTrainer) {
-        return res.status(400).json({ message: 'You already have a trainer!' });
+
+    // 3. LOGIC: Is it full?
+    if (trainer.currentTrainees >= trainer.maxTrainees) {
+        return res.status(400).json({ message: 'Sorry, full!' });
     }
 
-    // 5. UPDATE EVERYONE
-    // Assign trainer to user
-    user.assignedTrainer = trainer._id;
-    await user.save();
+    // 4. LOGIC: Already enrolled?
+    if (user.assignedTrainer) {
+        return res.status(400).json({ message: 'You already have one!' });
+    }
 
-    // Increment trainer count
-    trainer.currentTrainees += 1;
-    // Auto-update availability flag
+    // 5. Update Database
+    user.assignedTrainer = trainerId;
+    trainer.currentTrainees += 1; // Increase count
+
+    // Update the "Available" flag automatically
+    // If 4 < 5, true. If 5 < 5, false.
     trainer.isAvailable = trainer.currentTrainees < trainer.maxTrainees;
+
+    // Save both
+    await user.save();
     await trainer.save();
 
-    // 6. Success!
-    res.json({ message: `Enrolled with ${trainer.name}` });
+    res.json({ success: true });
 };
 ```
 
-## Frontend: Handling the UI (`home/TrainerCard.jsx`)
-The frontend is "dumb" - it just displays what the backend tells it.
+---
+
+## 3. Frontend Button (`TrainerCard.jsx`)
+
+The button is smart. It disables itself if `isAvailable` is false.
 
 ```javascript
-// Function inside React Component
-const handleEnroll = async () => {
-    // Call the API
-    const res = await fetch(`/api/trainers/enroll/${trainer._id}`, { ... });
-
-    if (res.ok) {
-        // Change button to "Enrolled"
-        setEnrolled(true);
-    } else {
-        // Show error (e.g., "Trainer is full!")
-        alert(error.message);
-    }
-}
+// React Component
+<button 
+    disabled={!trainer.isAvailable} // Grey out if false
+    onClick={handleEnroll}
+>
+    {trainer.isAvailable ? "Enroll Now" : "Fully Booked"}
+</button>
 ```

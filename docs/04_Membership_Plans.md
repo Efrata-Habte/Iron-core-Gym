@@ -1,44 +1,60 @@
-# 04. Membership Plans Deep Dive
+# 04. Membership Plans Explained
 
-This is the simplest feature, but fundamental. It involves reading static data from the database.
+This is a simple "Read-Only" feature. We just want to show the list of prices.
 
-## 1. Database Model (`models/Plan.js`)
-The plans are "Static Data" (they don't change often), but we store them in the DB so we can update prices without changing code.
+## 1. The Strategy
+We could just hardcode the prices in the React code.
+*Problem*: If we change the price, we have to re-deploy the whole website.
+*Solution*: Store prices in the Database. When the Backend answers, the Frontend updates instantly.
+
+## 2. The Model (`models/Plan.js`)
+It's just a list of items.
 
 ```javascript
 const PlanSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    price: { type: Number, required: true },
-    features: [String], // Array of strings: ["Pool", "Sauna"]
-    color: String       // UI Helper: "gold", "silver"
+    title: String,  // "Gold"
+    price: Number,  // 50
+    features: [String], // ["Sauna", "Pool"]
+    color: String   // "yellow" (for the CSS class)
 });
 ```
 
-## 2. Controller (`controllers/planController.js`)
+## 3. The Controller (`controllers/planController.js`)
+It's very boring, which is good!
 
 ```javascript
 exports.getPlans = async (req, res) => {
-    // 1. Fetch EVERYTHING from the 'plans' collection
+    // 1. Find Every single plan
     const plans = await Plan.find();
     
-    // 2. Return it as JSON
+    // 2. Send distinct JSON
     res.json(plans);
 };
 ```
 
-## 3. Frontend Integration (`components/plans/PlanCard.jsx`)
-The frontend receives the array: `[{ title: 'Basic', price: 20 }, ...]`.
-It maps over them:
+## 4. Frontend Usage
+React receives the list and loops over it.
 
 ```jsx
-{plans.map(plan => (
-    <div className={`card ${plan.color}`}>
-        <h3>{plan.title}</h3>
-        <h1>${plan.price}</h1>
-        <button onClick={() => navigate('/register', { state: { plan } })}>
-            Join Now
-        </button>
+// Frontend (Concept)
+const [plans, setPlans] = useState([]);
+
+// On Load, fetch data
+useEffect(() => {
+    fetch('/api/plans')
+        .then(res => res.json())
+        .then(data => setPlans(data));
+}, []);
+
+// Render
+return (
+    <div className="grid">
+        {plans.map(plan => (
+            <div className={`card ${plan.color}`}>
+                <h1>{plan.title}</h1>
+                <p>${plan.price}</p>
+            </div>
+        ))}
     </div>
-))}
+);
 ```
-We use React Router's `state` to pass the selected plan to the Registration page.

@@ -1,97 +1,87 @@
-# 03. Authentication Deep Dive
+# 03. Authentication Service Explained
 
-Authentication is how we verify "Who are you?" (Login).
-Authorization is "Are you allowed to do this?" (Permissions).
+Authentication is "Who are you?". Authorization is "Are you allowed to be here?".
 
-## The Key: JSON Web Tokens (JWT)
-We do not store "sessions" in the database. Instead, when you log in, we give you a generic "Badge" called a **Token**.
--   The Token works like a stamp on your hand at a club.
--   It contains encrypted data: `{ id: "user123", role: "admin" }`.
--   You typically store this in `localStorage` in the browser.
+## The Core Concept: Tokens (JWT)
 
-## 1. The Login Logic (`controllers/authController.js`)
+We don't keep a list of logged-in users on the server. Instead, when you log in, we give you a digital ID card called a **JSON Web Token (JWT)**.
 
+1.  **Login**: You send Password. We verify it. We verify YOU.
+2.  **Issue Token**: We create a signed token. It implies: "This user is ID 123 and they are an Admin".
+3.  **Future Requests**: You attach the token to every request. "Here is my ID card, let me in!"
+
+---
+
+## 1. Hashing Passwords (Security)
+We **NEVER** store plain passwords like "pizza123". If we get hacked, everyone is compromised. We store a "Hash" (like a mathematical fingerprint).
+
+**The Logic (`models/User.js`)**:
 ```javascript
-exports.login = async (req, res) => {
-    const { email, password } = req.body;
-
-    // 1. Find User by Email
-    // Explicitly ask for password because select:false hides it
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // 2. Check Password
-    // Uses bcrypt to compare the plain text "123456" with the encrypted hash
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // 3. Create Token
-    const token = jwt.sign(
-        { id: user._id, role: user.role }, // Payload
-        process.env.JWT_SECRET,            // Secret Key (Private!)
-        { expiresIn: '30d' }
-    );
-
-    // 4. Send Response
-    res.status(200).json({ success: true, token });
-};
+UserSchema.pre('save', async function(next) {
+    // Generate some random noise ("Salt")
+    const salt = await bcrypt.genSalt(10);
+    // Mix the password with salt and crush it
+    this.password = await bcrypt.hash(this.password, salt);
+});
 ```
+*Result in DB*: `$2a$10$X7...` (Unreadable gibberish).
 
-## 2. Protecting Routes (`middleware/authMiddleware.js`)
-How do we stop random people from accessing `/api/dashboard`? We use Middleware. Middleware acts like a bouncer; it runs *before* the controller.
+---
 
+## 2. The Middleware (The Bouncer)
+This is the most important file: `middleware/authMiddleware.js`.
+It runs *before* the controller logic.
+
+**The Code**:
 ```javascript
 exports.protect = async (req, res, next) => {
     let token;
 
-    // 1. Check for Header
-    // The Frontend sends: "Authorization: Bearer <token_string>"
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            // Get the token string
-            token = req.headers.authorization.split(' ')[1];
-
-            // 2. Verify Token
-            // If the secret key doesn't match, this throws an error (Fake token!)
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            // 3. Find User
-            // Get the user from the ID in the token
-            req.user = await User.findById(decoded.id).select('-password');
-
-            // 4. NEXT!
-            // Move to the actual controller function
-            next();
-        } catch (error) {
-            res.status(401).json({ message: 'Not authorized' });
-        }
+    // 1. Check if the "Authorization" header exists
+    if (req.headers.authorization) {
+        // It looks like "Bearer eyJhbGc..."
+        token = req.headers.authorization.split(' ')[1]; // Get just the code
     }
 
-    if (!token) {
-        res.status(401).json({ message: 'No token, run away!' });
+    if (!token) return res.status(401).json({ message: 'No ticket, no entry!' });
+
+    try {
+        // 2. Verify: Is this a valid token from US?
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // 3. Attach User: Find the user and stick it to the request
+        req.user = await User.findById(decoded.id);
+        
+        // 4. NEXT: Allow them through to the Controller
+        next();
+    } catch (err) {
+        res.status(401).json({ message: 'Fake ticket!' });
     }
 };
 ```
 
-### Admin Logic (`exports.admin`)
-This is a second middleware checking the role.
-```javascript
-exports.admin = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
-        next(); // Pass
-    } else {
-        res.status(403).json({ message: 'Admin only!' }); // Fail
-    }
-}
-```
+**Breakdown**:
+-   `req.headers`: Where the browser sends metadata.
+-   `jwt.verify`: Checks the digital signature. If you changed even one letter of the token, this fails.
+-   `next()`: The green light. "Go right ahead, sir."
 
-## 3. Frontend Integration (`context/AuthContext.jsx`)
-In React, we wrap our app in a Context.
-1.  **On Load**: Check `localStorage` for a token.
-2.  If found, set `user` state to "Logged In".
-3.  **Logout**: Delete token from `localStorage` and set `user = null`.
+---
+
+## 3. Login Controller (`authController.js`)
+It puts it all together.
+
+```javascript
+exports.login = async (req, res) => {
+    // 1. Check Credentials
+    const user = await User.findOne({ email });
+    const match = await bcrypt.compare(password, user.password); // Compare Hash
+    
+    if (!match) return Error("Wrong password");
+
+    // 2. Creates the Token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+    // 3. Send it
+    res.json({ token, user });
+};
+```

@@ -1,67 +1,67 @@
-# 07. AI Chatbot Deep Dive
+# 07. AI Chatbot Explained
 
-This feature lets users talk to an AI "Personal Trainer". It connects to **Google Gemini**.
+This feature allows users to chat with a "Personal Trainer AI".
+We use **Google Gemini** (like ChatGPT, but from Google).
 
-## The Service (`utils/geminiUtil.js`)
-We separate the "AI Logic" from the "Controller" to keep things clean.
+## 1. The Setup (API Key)
+You need a key to talk to Google. We store it in `.env` so hackers can't steal it.
+`GEMINI_API_KEY=AIzaSy...`
 
+---
+
+## 2. The Helper Function (`utils/geminiUtil.js`)
+
+We write a specific function just to talk to Google.
+
+**The English Explanation**:
+1.  Connect to Google with the Key.
+2.  Prepare the "Prompt". We don't just send the user's question. We wrap it in a **Persona**.
+    -   *User says*: "How do I lose weight?"
+    -   *We send*: "You are a professional Gym Trainer. The user asks: How do I lose weight?"
+3.  Send it and wait for the text response.
+
+**The Code**:
 ```javascript
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 exports.getGymAdvice = async (userMessage) => {
-    // 1. Initialize API with Key from .env
+    // Connect
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // 2. The Persona Prompt
-    // We wrap the user's question to give it context.
-    // If we didn't do this, the AI might act like a generic bot.
+    // The Persona (Context)
     const prompt = `
-        You are an expert fitness trainer and nutritionist named IronCoach.
-        Keep answers short (under 50 words) and motivating.
-        User asks: "${userMessage}"
+        You are IronCoach, a tough but encouraging gym trainer.
+        User: "${userMessage}"
     `;
 
-    // 3. Send to Google
+    // Talk to Google
     const result = await model.generateContent(prompt);
-    const response = await result.response;
     
-    // 4. Return just the text
-    return response.text();
+    // Extract Text
+    return result.response.text();
 };
 ```
 
-## The Controller (`controllers/aiChatbotController.js`)
-The controller simply handles the Traffic.
+---
+
+## 3. The Controller (`controllers/aiChatbotController.js`)
+
+This just connects the Frontend to the Helper.
 
 ```javascript
 exports.chat = async (req, res) => {
-    const { message } = req.body; // e.g., "I want abs"
+    const { message } = req.body; // Frontend sends: { "message": "Hi" }
 
     try {
-        // Call the service above
-        const reply = await getGymAdvice(message);
-        
-        // Send back to frontend
-        res.json({ reply });
+        const reply = await getGymAdvice(message); // Call Helper
+        res.json({ reply }); // Send back: { "reply": "Go lift weights!" }
     } catch (err) {
-        // Fallback if AI is down
-        res.status(500).json({ reply: "My brain is tired. Try again later." });
+        res.status(500).json({ reply: "I am offline." });
     }
 };
 ```
 
-## The Frontend (`home/Chatbot.jsx`)
-1.  **State**: Keeps an array of messages `[{ text: "Hi", sender: "user" }, ...]`.
-2.  **Send**:
-    ```javascript
-    // Add user message to UI immediately
-    setMessages(prev => [...prev, { text: input, sender: 'user' }]);
-
-    // Call Backend
-    const res = await fetch('/api/ai/chat', { ...body: input... });
-    const data = await res.json();
-
-    // Add AI reply to UI
-    setMessages(prev => [...prev, { text: data.reply, sender: 'bot' }]);
-    ```
+## 4. Why use a Backend?
+*Question*: Why not call Google directly from the Frontend (React)?
+*Answer*: **Security**. If you check the code in the browser, you can see the API Key. By doing it on the Server, the key stays hidden.

@@ -1,63 +1,70 @@
-# 01. Architecture Deep Dive
+# 01. Architecture Deep Dive (Tutorial)
 
-## What is this project?
-This is a **Full-Stack Web Application**. It has two specific parts that talk to each other:
+## The Big Picture: How Web Apps Work
 
-1.  **Frontend (The "Client")**: Built with **React**. This is what runs in your browser (Chrome/Firefox). It handles what you *see* and *click*.
-2.  **Backend (The "Server")**: Built with **Node.js**. This runs on a computer (or cloud server) somewhere else. It handles the *logic*, *security*, and *database*.
+Imagine a restaurant.
+1.  **The Customer (You/Frontend)**: You sit at a table and look at the menu. You decide what you want.
+2.  **The Waiter (API Request)**: You can't go into the kitchen yourself. You tell the waiter "I want the Steak".
+3.  **The Kitchen (Backend)**: The waiter tells the chef. The chef checks the fridge (Database), cooks the meal (Logic), and puts it on a plate.
+4.  **The Waiter (Response)**: The waiter brings the plate back to you.
 
-## The "MERN" Stack (ish)
-This project follows a common pattern called **MVC** (Model-View-Controller), though in React apps the "View" is separated.
-
--   **M**ongoDB: The Database (where we save data).
--   **E**... we replaced "Express" with a **Custom Vanilla Framework** for learning purposes.
--   **R**eact: The UI.
--   **N**ode.js: The Runtime environment for the backend.
-
----
-
-## The Life of a Request
-This is the most important concept to understand. Only the Backend has access to the Database. If the Frontend wants data (like "Show me all trainers"), it must **ask** the Backend.
-
-### Steps
-1.  **User Action**: You click "Login" in the React app.
-2.  **Frontend Request**: The React code (`authService.js`) uses `fetch()` to send a message across the internet to `http://localhost:5000/api/auth/login`.
-3.  **Server Listens**: The Backend is sitting there waiting (`server.js`). It hears the request.
-4.  **Routing**: The Backend looks at the path: `/api/auth/login`. It asks, "Who handles this?"
-    -   It finds `authRoutes.js`.
-    -   Inside that, it finds the specific function: `authController.login`.
-5.  **Controller Magic**: The `login` function runs:
-    -   It takes the email/password you sent.
-    -   It asks the **Database Model** (`User.js`): "Do we have a user with this email?"
-    -   It checks the password.
-6.  **Response**: If everything is good, the Controller sends a JSON packet back: `200 OK`.
-7.  **Frontend Update**: React receives the OK and updates the screen (e.g., changes "Login" to "Logout").
+In this project:
+-   **Frontend (React)** is the Customer.
+-   **Backend (Node.js)** is the Kitchen.
+-   **Database (MongoDB)** is the Fridge.
 
 ---
 
-## Project Folder Structure Explained
+## 2. The Project Folder Structure
 
-### `/backend/src/`
+We organize our code to keep things clean.
 
-#### `server.js` (The Spark)
-The entry point. It's like turning the key in the ignition. It connects to the database and starts listening for traffic.
+### `backend/src/`
 
-#### `app.js` (The Traffic Cop)
-This file sees every single request first. It sets up the rules:
--   **CORS**: "Allowed to talk to Frontend".
--   **Body Parser**: "Convert incoming text to JSON objects".
--   **Main Router**: "Send `/api/users` to the User Routes".
+-   **`server.js`**: The ignition key. Run this to start the kitchen.
+-   **`app.js`**: The Front Desk. It greets everyone who enters.
+-   **`core/`**: The "Custom Framework". Since we aren't using a pre-made kit like Express, we built our own tools here.
+-   **`controllers/`**: The Chefs. `authController` handles logins, `trainerController` handles trainers.
+-   **`models/`**: The Recipes. Keeps standards consistent (e.g., "A User must have a name").
+-   **`routes/`**: The Menu. Lists what you can order (`/login`, `/register`).
 
-#### `core/` (The Engine)
-Since we aren't using Express, this folder contains the "framework" code.
--   `Router.js`: The logic that matches URLs to functions.
--   `responseHelpers.js`: Adds methods like `res.json()` to the raw Node response.
+---
 
-#### `controllers/` (The Brains)
-Where the actual thinking happens. `authController`, `trainerController`, etc. each handle specific features.
+## 3. The Life of a Request (Step-by-Step)
 
-#### `models/` (The Memory)
-Defines what data looks like. "A User has a name (string) and email (string)".
+Let's see what happens when you click **"Login"**.
 
-#### `routes/` (The Map)
-Simple files that say: "If the URL is X, run Controller Y".
+### Step 1: Frontend Asks
+The React code sends a message.
+
+```javascript
+// Frontend Code (simplified)
+fetch('http://localhost:5000/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'bob@gmail.com', password: '123' })
+});
+```
+*Translation: "Hey Server! Here is Bob's info. Log him in!"*
+
+### Step 2: Server Receives (`app.js`)
+The message arrives at the backend.
+1.  **CORS**: Checks if the request came from a trusted website (our frontend).
+2.  **Body Parser**: The data comes in as a messy stream of text. We convert it into a nice Object: `{ email: 'bob...', password: '123' }`.
+
+### Step 3: Routing (`routes/authRoutes.js`)
+The server looks at the URL: `/api/auth/login`.
+It checks its map:
+> "Oh, `/api/auth` goes to the Auth Router. And `/login` goes to the `login` controller."
+
+### Step 4: Logic (`controllers/authController.js`)
+The code runs:
+1.  Look for Bob in the database.
+2.  Check if "123" matches his hidden password.
+3.  If yes, create a "Badge" (Token).
+
+### Step 5: Response
+The server sends the Token back.
+> "Here is your badge. Show this next time you want to see the dashboard."
+
+### Step 6: Frontend Updates
+React sees the success message and changes the screen from the Login Form to the User Profile.
