@@ -5,6 +5,7 @@ exports.getGalleryImages = async (req, res) => {
         // Exclude the heavy 'data' field from the list response for performance
         const images = await GalleryImage.find({ status: 'approved' })
             .select('-data') // Do not fetch binary data here
+            .populate('uploadedBy', 'name')
             .sort({ createdAt: -1 });
         res.json(images);
     } catch (err) {
@@ -35,10 +36,12 @@ exports.getPendingImages = async (req, res) => {
 };
 
 exports.uploadImage = async (req, res) => {
+    console.log('uploader called'); //====================================================================================================
     try {
         const { title, category } = req.body;
-        // Admins are auto-approved, users are pending
-        const status = req.user.role === 'admin' ? 'approved' : 'pending';
+        console.log(req); //====================================================================================================
+        // Admins and super-admins are auto-approved, regular users are pending
+        const status = (req.user.role === 'admin' || req.user.role === 'super-admin') ? 'approved' : 'pending';
 
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
@@ -47,7 +50,7 @@ exports.uploadImage = async (req, res) => {
         const image = new GalleryImage({
             title,
             category,
-            data: req.file.buffer, // Save buffer
+            data: req.file.buffer, // Save buffer to MongoDB
             contentType: req.file.mimetype, // Save mimetype
             status,
             uploadedBy: req.user.id
@@ -60,6 +63,15 @@ exports.uploadImage = async (req, res) => {
 
         res.status(201).json(responseImage);
     } catch (err) {
+        // Check for MongoDB quota/storage limit errors
+        if (err.code === 16500 || err.message.includes('quota') ||
+            err.message.includes('storage') || err.message.includes('limit') ||
+            err.message.includes('exceeded') || err.codeName === 'ExceededMemoryLimit') {
+            return res.status(507).json({
+                message: 'Database storage capacity is full. Please contact the administrator.',
+                isStorageFull: true
+            });
+        }
         res.status(500).json({ message: err.message });
     }
 };

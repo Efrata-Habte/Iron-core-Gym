@@ -8,13 +8,20 @@ const storage = multer.memoryStorage(); // Store files in memory buffer
 const upload = multer({ storage });
 const { protect, admin } = require('../middleware/authMiddleware');
 
-// Wrapper to make multer work as middleware
+// Wrapper to make multer work as middleware - returns a Promise for async Router compatibility
 const withUpload = (fieldName) => (req, res, next) => {
-    upload.single(fieldName)(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ message: 'File upload error: ' + err.message });
-        }
-        next();
+    console.log('withUpload middleware called for field:', fieldName);
+    return new Promise((resolve, reject) => {
+        upload.single(fieldName)(req, res, (err) => {
+            console.log('multer finished, err:', err, 'file:', req.file ? 'exists' : 'missing');
+            if (err) {
+                res.status(400).json({ message: 'File upload error: ' + err.message });
+                return resolve(); // Resolve after sending error response
+            }
+            // Call next() and resolve the promise
+            next();
+            resolve();
+        });
     });
 };
 
