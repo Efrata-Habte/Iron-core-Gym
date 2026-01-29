@@ -159,7 +159,16 @@ export default function Gallery() {
 
             <div className="gallery">
                 {loading ? (
-                    <p style={{ color: 'white', textAlign: 'center', width: '100%', gridColumn: '1/4' }}>Loading gallery...</p>
+                    // Skeleton Loader
+                    [0, 1, 2].map((colIndex) => (
+                        <div key={colIndex} className="column">
+                            {[0, 1, 2].map((i) => (
+                                <div key={i} className="gallery-item-wrapper skeleton-item">
+                                    <div className="skeleton-image shimmer"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ))
                 ) : images.length > 0 ? (
                     columns.map((column, colIndex) => (
                         <div key={colIndex} className="column">
@@ -277,6 +286,46 @@ export default function Gallery() {
                     background: var(--primary-color);
                     color: white;
                     transform: scale(1.1) !important;
+                }
+
+                /* Skeleton Loader Styles */
+                .skeleton-item {
+                    height: 300px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 1rem;
+                    overflow: hidden;
+                    position: relative;
+                }
+                .skeleton-image {
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.05);
+                }
+                .shimmer {
+                    position: relative;
+                    overflow: hidden;
+                }
+                .shimmer::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    left: 0;
+                    transform: translateX(-100%);
+                    background-image: linear-gradient(
+                        90deg,
+                        rgba(255, 255, 255, 0) 0,
+                        rgba(255, 255, 255, 0.05) 20%,
+                        rgba(255, 255, 255, 0.1) 60%,
+                        rgba(255, 255, 255, 0)
+                    );
+                    animation: shimmer 2s infinite;
+                }
+                @keyframes shimmer {
+                    100% {
+                        transform: translateX(100%);
+                    }
                 }
             `}</style>
         </section>
