@@ -13,16 +13,24 @@ exports.getTrainers = async (req, res) => {
 exports.createTrainer = async (req, res) => {
     try {
         const { name, years, headline, headlineAccent, quote, image, position, maxTrainees } = req.body;
+        let imagePath = image;
+        if (req.file) {
+            // Convert buffer to base64
+            const b64 = req.file.buffer.toString('base64');
+            imagePath = `data:${req.file.mimetype};base64,${b64}`;
+        }
+
         const trainer = new Trainer({
             name,
             years,
             headline,
             headlineAccent,
             quote,
-            image: req.file ? `/uploads/${req.file.filename}` : image, // Support both URL and upload
+            image: imagePath,
             position,
             maxTrainees: maxTrainees || 5
         });
+
         await trainer.save();
         res.status(201).json(trainer);
     } catch (err) {

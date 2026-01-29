@@ -8,7 +8,7 @@ const { createStaticHandler } = require('./core/staticHandler');
 const router = new Router();
 
 // Static file handler for uploads
-const serveUploads = createStaticHandler('/uploads', 'public/uploads');
+// Static file handler removed (Images stored in DB)
 
 // Mount all route modules
 router.use('/api/auth', require('./routes/authRoutes'));
