@@ -1,40 +1,44 @@
-# 04. Membership Plans
+# 04. Membership Plans Deep Dive
 
-## Purpose
-Displays the available gym membership tiers (e.g., Basic, Silver, Gold). Users select a plan during registration.
+This is the simplest feature, but fundamental. It involves reading static data from the database.
 
-## Frontend Components
-- **`plans/PlanCard.jsx`**: Displays a single plan's price and features.
-- **`home/PlansSection.jsx`**: Fetches the list of plans and renders a grid of `PlanCard`s.
+## 1. Database Model (`models/Plan.js`)
+The plans are "Static Data" (they don't change often), but we store them in the DB so we can update prices without changing code.
 
-## Backend Endpoints (`routes/planRoutes.js`)
+```javascript
+const PlanSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    price: { type: Number, required: true },
+    features: [String], // Array of strings: ["Pool", "Sauna"]
+    color: String       // UI Helper: "gold", "silver"
+});
+```
 
-### 1. Get All Plans
-- **Endpoint**: `GET /api/plans`
-- **Controller**: `planController.getPlans`
-- **Logic**:
-  - Simple query: `Plan.find()`
-  - Fetches all plan documents from the `plans` collection.
-- **Output**: Array of Plan objects.
-  ```json
-  [
-    {
-      "title": "Basic Plan",
-      "price": 29.99,
-      "features": ["Gym Access", "Locker Room"]
-    },
-    ...
-  ]
-  ```
+## 2. Controller (`controllers/planController.js`)
 
-## Database Schema (`models/Plan.js`)
-- **`title`**: String (Unique)
-- **`price`**: Number
-- **`features`**: Array of Strings
-- **`color`**: String (for UI styling)
+```javascript
+exports.getPlans = async (req, res) => {
+    // 1. Fetch EVERYTHING from the 'plans' collection
+    const plans = await Plan.find();
+    
+    // 2. Return it as JSON
+    res.json(plans);
+};
+```
 
-## Flow: Choosing a Plan
-1.  **Home Page Loads**: `PlansSection` calls `GET /api/plans`.
-2.  **Display**: Plans are shown to the user.
-3.  **Selection**: When a user clicks "Join Now" on a plan, the plan's title is passed to the Registration Form (often via URL query param or state).
-4.  **Register**: The backend receives the plan title and links the new user to that specific Plan ID.
+## 3. Frontend Integration (`components/plans/PlanCard.jsx`)
+The frontend receives the array: `[{ title: 'Basic', price: 20 }, ...]`.
+It maps over them:
+
+```jsx
+{plans.map(plan => (
+    <div className={`card ${plan.color}`}>
+        <h3>{plan.title}</h3>
+        <h1>${plan.price}</h1>
+        <button onClick={() => navigate('/register', { state: { plan } })}>
+            Join Now
+        </button>
+    </div>
+))}
+```
+We use React Router's `state` to pass the selected plan to the Registration page.

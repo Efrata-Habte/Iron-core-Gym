@@ -1,70 +1,95 @@
-# 02. Database Design
+# 02. Database Design Deep Dive
 
-## Introduction
-The project uses **MongoDB**, a NoSQL database. Instead of tables and rows, we have **Collections** and **Documents** (which look like JSON objects).
+## What is MongoDB and Mongoose?
+-   **MongoDB**: A "NoSQL" database. Instead of rows and columns (like Excel), it saves data as **Documents** (JSON-like objects).
+-   **Mongoose**: A library that lets us define "Schemas" (Blueprints) for our data in JavaScript.
 
-We interact with the database using **Mongoose**, which allows us to define "Schemas" (blueprints) for our data.
+## 1. The User Schema (`models/User.js`)
+This defines what a "User" looks like in our database.
 
-## Collections
+```javascript
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs'); // Tool for encrypting passwords
 
-### 1. Users (`users`)
-Stores all registered users (Members, Admins, Trainers).
+const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, 'Please add a name'] // Validator: Must exist
+    },
+    email: {
+        type: String,
+        required: [true, 'Please add an email'],
+        unique: true, // No two users can have the same email
+        match: [ /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email' ] // Regex check
+    },
+    password: {
+        type: String,
+        required: [true, 'Please add a password'],
+        minlength: 6,
+        select: false // SECURITY: Don't return the password by default when finding a user
+    },
+    role: {
+        type: String,
+        enum: ['member', 'trainer', 'admin'], // Only these values allowed
+        default: 'member'
+    },
+    // RELATIONSHIP: Linking to the Plan Schema
+    membershipPlan: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Plan'
+    },
+    // RELATIONSHIP: Linking to the Trainer Schema
+    assignedTrainer: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Trainer'
+    }
+});
+```
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `name` | String | User's full name |
-| `email` | String | Unique email address |
-| `password` | String | Hashed (encrypted) password |
-| `role` | String | `member`, `admin`, `super-admin`, or `trainer` |
-| `membershipStatus` | String | `active`, `inactive` |
-| `membershipPlan` | ObjectId | Link to `plans` collection |
-| `assignedTrainer` | ObjectId | Link to `trainers` collection (if enrolled) |
+### Key Concepts
+1.  **Validation**: `required`, `match`, `minlength` ensure bad data doesn't get saved.
+2.  **`select: false`**: This is huge for security. If you run `User.find()`, it won't send the password hashes back to the frontend.
+3.  **Relationships (`ref`)**: We store the `_id` of another document. `membershipPlan` doesn't store the plan name "Gold", it stores `65a0f...` (the ID of the Gold Plan).
 
-### 2. Trainers (`trainers`)
-Stores details about the gym's trainers.
+### Encryption (The "Hook")
+We use a "Pre-save Hook" to automatically encrypt passwords.
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `name` | String | Trainer's name |
-| `image` | String | URL to profile image |
-| `specialty` | String | e.g., "Weightlifting" |
-| `isAvailable` | Boolean | calculated based on capacity |
-| `maxTrainees` | Number | Max clients allowed |
-| `currentTrainees` | Number | Current active clients |
+```javascript
+// Run this BEFORE saving
+UserSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+        next(); // If password didn't change, skip
+    }
+    // Generate "Salt" (random data)
+    const salt = await bcrypt.genSalt(10);
+    // Hash the password with the salt
+    this.password = await bcrypt.hash(this.password, salt);
+});
+```
 
-### 3. Plans (`plans`)
-Stores the membership options.
+## 2. The Trainer Schema (`models/Trainer.js`)
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `title` | String | e.g., "Silver Plan" |
-| `price` | Number | Monthly cost |
-| `features` | [String] | List of benefits |
+```javascript
+const TrainerSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    maxTrainees: { type: Number, default: 5 },
+    currentTrainees: { type: Number, default: 0 },
+    isAvailable: { type: Boolean, default: true }
+});
+```
 
-### 4. Gallery (`galleryimages`)
-Stores images for the public gallery.
+### Logic: Capacity Management
+When a user enrolls, we check if `currentTrainees < maxTrainees`.
+The `isAvailable` flag is purely visual helper logic we update in the controller, based on the counts.
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `url` | String | Path to the image file |
-| `caption` | String | Title/Description |
-| `status` | String | `pending` (needs approval) or `approved` |
-| `uploadedBy` | ObjectId | User who uploaded it |
+## 3. Relationships Visualization
 
-## Relationships
-
-1.  **User -> Plan**: A user has one `membershipPlan`. We store the Plan's ID in the User document.
-2.  **User -> Trainer**: A user can be assigned to one `assignedTrainer`. We store the Trainer's ID.
-3.  **Trainer -> Users (Implicit)**: We can find all trainees for a trainer by searching Users where `assignedTrainer == TrainerID`.
-
-## Common Flows
-
-### User Registration
-1.  **Input**: User sends Name, Email, Password, Plan Name.
-2.  **Lookup**: Backend finds the `Plan` document by name.
-3.  **create**: New `User` document created with `membershipPlan = Plan._id`.
-
-### Enrolling with a Trainer
-1.  **Check**: Check if `Trainer.currentTrainees < Trainer.maxTrainees`.
-2.  **Update User**: Set `User.assignedTrainer = Trainer._id`.
-3.  **Update Trainer**: Increment `Trainer.currentTrainees`.
+```
+[ Collection: users ]           [ Collection: plans ]
+{                               {
+  _id: "user123",                 _id: "plan999",
+  name: "Zeamanuel",              title: "Gold Plan",
+  membershipPlan: "plan999" ----> price: 50
+}                               }
+```
+When we want the user's plan details (like price), we use `.populate('membershipPlan')`. This tells Mongoose: "Take this ID, go find the document in Plans, and replace the ID with the actual data."

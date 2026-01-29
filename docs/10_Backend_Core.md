@@ -1,53 +1,94 @@
-# 10. Backend Core (The Engine)
+# 10. Backend Core Deep Dive (The Engine)
 
-## Introduction
-The backend uses a **Custom Vanilla Node.js Framework** located in the `backend/src/core/` directory. This replaces standard frameworks like Express.js, handling routing, middleware, and request/response abstraction manually.
+This project uses a **custom-built framework** instead of Express.js. This is fantastic for learning because it shows you exactly how web servers work "under the hood".
 
-## The `core/` Directory
+All the "magic" happens in `backend/src/core/`.
 
-### 1. `Router.js`
-- **Purpose**: Managing API routes and matching URLs to functions.
-- **Key Features**:
-  - `addRoute(method, path, handler)`: Stores routes in an array.
-  - `handle(req, res)`:
-    - Parses the incoming URL.
-    - Matches it against stored patterns (handling params like `:id`).
-    - Executes the appropriate Controller function.
-  - `use(path, router)`: Supports sub-routers (mounting `authRoutes` under `/api/auth`).
-  - Supports middleware execution chains.
+## 1. `Router.js` (The Dispatcher)
+This file is responsible for deciding which function runs when a user visits a URL.
 
-### 2. `requestHelpers.js`
-- **Purpose**: Processing incoming data.
-- **Key Function**: `parseBody(req)`
-  - Reads the raw data stream from the HTTP request.
-  - Parses JSON (`application/json`) or URL-encoded data.
-  - Attaches the result to `req.body`, making it easy for controllers to access user inputs.
+### How it works (Simplified Code)
+```javascript
+class Router {
+    constructor() {
+        this.routes = []; // We store all our rules here
+    }
 
-### 3. `responseHelpers.js`
-- **Purpose**: Enhancing the raw Node.js `res` object with convenient methods.
-- **Key Methods Added**:
-  - `res.status(code)`: Sets the HTTP status code (chainable).
-  - `res.json(data)`: Automatically sets the `Content-Type` to `application/json` and sends the object as a string.
-  - `res.send(data)`: Handles text or HTML responses.
+    // When we say router.get('/users', func)...
+    addRoute(method, path, ...handlers) {
+        // We push { method: 'GET', path: '/users', handler: func } into the array
+        this.routes.push({ method, path, handlers });
+    }
 
-### 4. `corsHandler.js`
-- **Purpose**: Handling "Cross-Origin Resource Sharing".
-- **Why?**: The frontend runs on port `5173` and the backend on `5000`. Browsers block this by default for security.
-- **Logic**: Adds headers (`Access-Control-Allow-Origin`) to tell the browser it's safe to allow the frontend to talk to the server.
+    // When a request comes in...
+    async handle(req, res) {
+        const method = req.method; // e.g., "GET"
+        const url = req.url;       // e.g., "/users"
 
-### 5. `staticHandler.js`
-- **Purpose**: Serving file uploads (images).
-- **Logic**:
-  - Checks if a request starts with `/uploads`.
-  - Reads the file from `backend/public/uploads/`.
-  - Determines the file setup (MIME type) based on extension (.jpg, .png).
-  - Streams the file to the user.
+        // Loop through all stored routes
+        for (const route of this.routes) {
+            // If Method matches AND Path matches...
+            if (route.method === method && url === route.path) {
+                // Run the handler function!
+                await route.handlers[0](req, res);
+                return;
+            }
+        }
+    }
+}
+```
+*Note: The real file handles parameters like `/users/:id` using Regex matching, but this is the core idea.*
 
-## Request Flow
-1.  **Server Listens**: `server.js` starts `http.createServer`.
-2.  **Request In**: `app.js`'s `requestHandler` is called.
-3.  **Enhancement**: `responseHelpers` extends the `res` object.
-4.  **CORS**: `corsHandler` checks permissions.
-5.  **Static**: If it's an image, `staticHandler` serves it.
-6.  **Body**: `requestHelpers` parses JSON data.
-7.  **Routing**: `Router` matches the URL and runs the Controller.
+## 2. `requestHelpers.js` (The Translator)
+Node.js receives data in "Chunks" (streams of binary data). Browsers send data as Strings. We need JavaScript Objects to work with them.
+
+### `parseBody(req)`
+This function listens to the data stream and builds the object.
+
+```javascript
+// Concept:
+let body = '';
+req.on('data', chunk => {
+    body += chunk.toString(); // "name=John"
+});
+req.on('end', () => {
+    // Convert string to Object
+    req.body = JSON.parse(body); // { name: "John" }
+});
+```
+Without this, `req.body` would be undefined!
+
+## 3. `responseHelpers.js` (The Decorator)
+Standard Node.js `res` objects are very basic. You have to write `res.setHeader('Content-Type', 'application/json')` every time. This helper adds shortcuts.
+
+```javascript
+function extendResponse(res) {
+    // We attach a new function .json() to the res object
+    res.json = function(data) {
+        this.setHeader('Content-Type', 'application/json');
+        this.end(JSON.stringify(data)); // Send the object as a string
+    };
+
+    // We attach .status()
+    res.status = function(code) {
+        this.statusCode = code;
+        return this; // Return self so we can chain: res.status(200).json(...)
+    };
+}
+```
+
+## 4. `corsHandler.js` (The Security Guard)
+Web browsers block "Cross-Origin" requests by default. If your Frontend is on `localhost:5173` and Backend on `localhost:5000`, the browser blocks it unless the backend says "It's okay".
+
+This file adds the literal headers:
+```javascript
+res.setHeader('Access-Control-Allow-Origin', '*'); // "Anyone can talk to me"
+res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+```
+
+## Summary
+In `app.js`, we use all these pieces together:
+1.  Enhance `res` with **responseHelpers**.
+2.  Run **corsHandler** to allow the browser.
+3.  Run **requestHelpers** to parse the body.
+4.  Ask **Router** to find the right Controller.

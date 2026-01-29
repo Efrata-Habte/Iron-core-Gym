@@ -1,49 +1,73 @@
-# 06. Gallery
+# 06. Gallery Deep Dive (Files & Approvals)
 
-## Purpose
-A visual showcase of the gym environment. Users can view images, and registered users can upload their own gym photos (which require admin approval).
+This feature involves two distinct parts:
+1.  **File Upload**: Sending an image from the browser to the server's disk.
+2.  **Approval Workflow**: An Admin must say "Yes" before the public sees it.
 
-## Frontend Components
-- **`about/Gallery.jsx`**: Main gallery grid. Fetches images.
-- **`ui/ImageModal.jsx`**: Popup when clicking an image to view it full-size.
-- **`ui/UploadModal.jsx`**: Form for users to upload new images.
+## Part 1: File Uploads
 
-## Backend Endpoints (`routes/galleryRoutes.js`)
+### The Middleware (`middleware/uploadMiddleware.js`)
+Node.js doesn't understand files by default. We use a library called **Multer**.
 
-### 1. Get Public Images
-- **Endpoint**: `GET /api/gallery`
-- **Controller**: `galleryController.getApprovedImages`
-- **Logic**: Returns only images where `status === 'approved'`.
+```javascript
+const multer = require('multer');
 
-### 2. Upload Image (Protected)
-- **Endpoint**: `POST /api/gallery/upload`
-- **Controller**: `galleryController.uploadImage`
-- **Middleware**: `protect`, `withUpload('image')`
-- **Logic**:
-  1.  **File Handling**: `multer` middleware saves the uploaded file to `backend/public/uploads/`.
-  2.  **Database**: Creates a new `GalleryImage` document.
-  3.  **Status**: Sets `status = 'pending'` (default).
-  4.  **Response**: Returns the new image object.
+// Configure WHERE to save files
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'backend/public/uploads/'); // Save here
+    },
+    filename: (req, file, cb) => {
+        // Create a unique name: "image-17234234.jpg"
+        cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
 
-### 3. Approve/Reject (Admin Only)
-- **Endpoint**: `PATCH /api/gallery/:id/status`
-- **Controller**: `galleryController.updateImageStatus`
-- **Logic**: Admin changes status to 'approved' or 'rejected'.
+const upload = multer({ storage: storage });
+```
 
-## Database Schema (`models/GalleryImage.js`)
-- `url`: String (path to image, e.g., `/uploads/file.jpg`)
-- `caption`: String
-- `status`: String (`pending`, `approved`, `rejected`)
-- `uploadedBy`: ObjectId (User ref)
+### The Controller (`galleryController.uploadImage`)
 
-## Flow: Uploading an Image
-1.  **User** clicks "Upload" in the Gallery section.
-2.  **File Select**: User chooses a file and enters a caption.
-3.  **Submit**: Frontend sends a `Multipart/Form-Data` request to the backend.
-4.  **Backend**:
-    - Saves file to disk.
-    - Saves entry to DB (`status: pending`).
-5.  **Feedback**: User sees "Upload successful! Pending approval."
-6.  **Visibility**: Image does NOT appear in the main gallery yet.
-7.  **Admin**: Logs in, sees the pending request, and clicks "Approve".
-8.  **Public**: Image generates in the main gallery.
+```javascript
+exports.uploadImage = async (req, res) => {
+    // Multer puts the file info here:
+    // req.file = { filename: "image-123.jpg", path: "..." }
+
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    // Create DB Entry (Metadata)
+    const newImage = await GalleryImage.create({
+        url: `/uploads/${req.file.filename}`, // Save the path, not the actual file in DB!
+        caption: req.body.caption,
+        uploadedBy: req.user.id,
+        status: 'pending' // Default hidden
+    });
+
+    res.status(201).json(newImage);
+};
+```
+
+## Part 2: Serving Images (`backend/src/core/staticHandler.js`)
+When the frontend asks for `<img src="/uploads/image-123.jpg" />`, the backend needs to respond.
+
+**Vanilla Node Logic**:
+1.  Check if URL starts with `/uploads`.
+2.  Find file `backend/public/uploads/image-123.jpg`.
+3.  Stream it to the browser.
+
+## Part 3: Approval Flow
+1.  **User Uploads**: DB has `status: 'pending'`.
+2.  **Public Gallery (`GET /api/gallery`)**:
+    ```javascript
+    // Only return approved images
+    const images = await GalleryImage.find({ status: 'approved' });
+    res.json(images);
+    ```
+    *Result: The user's image is NOT returned.*
+3.  **Admin Dashboard**:
+    -   Calls `GET /api/gallery/pending` (Special admin route).
+    -   Admin clicks "Approve".
+    -   Backend runs: `image.status = 'approved'; await image.save();`.
+4.  **Public Gallery**: Now the image appears!

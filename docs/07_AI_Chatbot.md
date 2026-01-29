@@ -1,40 +1,67 @@
-# 07. AI Chatbot
+# 07. AI Chatbot Deep Dive
 
-## Purpose
-An intelligent assistant powered by Google Gemini AI. It answers user questions about workouts, nutrition, and gym plans.
+This feature lets users talk to an AI "Personal Trainer". It connects to **Google Gemini**.
 
-## Frontend Components
-- **`home/Chatbot.jsx`**: A floating chat interface.
-  - Handles opening/closing the chat window.
-  - Maintains the list of messages (User vs. AI).
-  - Sends the user's message to the backend.
+## The Service (`utils/geminiUtil.js`)
+We separate the "AI Logic" from the "Controller" to keep things clean.
 
-## Backend Endpoints (`routes/aiRoutes.js`)
+```javascript
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-### 1. Chat with AI
-- **Endpoint**: `POST /api/ai/chat`
-- **Controller**: `aiChatbotController.chat`
-- **Input**: `{ "message": "How do I build muscle?" }`
-- **Logic**:
-  1.  Calls `geminiUtil.getGymAdvice(message)`.
-  2.  **Gemini Utils**:
-      - Initializes `GoogleGenerativeAI` with the API Key.
-      - Uses model `gemini-1.5-flash` (or configured fallback).
-      - Sends a prompt: "You are a professional gym trainer... User asks: [message]".
-      - Returns the AI's text response.
-- **Output**: `{ "reply": "To build muscle, focus on hypertrophy..." }`
+exports.getGymAdvice = async (userMessage) => {
+    // 1. Initialize API with Key from .env
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-## External Service: Google Gemini
-- We use the `@google/generative-ai` library.
-- **API Key**: Stored in `.env` as `GEMINI_API_KEY`.
-- **Model Fallback**: The utility has a list of models it tries in order if one fails (e.g., due to quota).
+    // 2. The Persona Prompt
+    // We wrap the user's question to give it context.
+    // If we didn't do this, the AI might act like a generic bot.
+    const prompt = `
+        You are an expert fitness trainer and nutritionist named IronCoach.
+        Keep answers short (under 50 words) and motivating.
+        User asks: "${userMessage}"
+    `;
 
-## Flow: Asking a Question
-1.  **User** types "Best protein for weight loss?" and hits Send.
-2.  **Frontend** shows the user's message instantly.
-3.  **API**: Frontend POSTs the message to `/api/ai/chat`.
-4.  **Backend**:
-    - Wraps the question in a specific "Persona Prompt" (Training/Nutrition context).
-    - Calls Google's API.
-5.  **Response**: Google responds with advice.
-6.  **UI**: Backend sends the text back, and the Frontend displays the AI's reply bubble.
+    // 3. Send to Google
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    
+    // 4. Return just the text
+    return response.text();
+};
+```
+
+## The Controller (`controllers/aiChatbotController.js`)
+The controller simply handles the Traffic.
+
+```javascript
+exports.chat = async (req, res) => {
+    const { message } = req.body; // e.g., "I want abs"
+
+    try {
+        // Call the service above
+        const reply = await getGymAdvice(message);
+        
+        // Send back to frontend
+        res.json({ reply });
+    } catch (err) {
+        // Fallback if AI is down
+        res.status(500).json({ reply: "My brain is tired. Try again later." });
+    }
+};
+```
+
+## The Frontend (`home/Chatbot.jsx`)
+1.  **State**: Keeps an array of messages `[{ text: "Hi", sender: "user" }, ...]`.
+2.  **Send**:
+    ```javascript
+    // Add user message to UI immediately
+    setMessages(prev => [...prev, { text: input, sender: 'user' }]);
+
+    // Call Backend
+    const res = await fetch('/api/ai/chat', { ...body: input... });
+    const data = await res.json();
+
+    // Add AI reply to UI
+    setMessages(prev => [...prev, { text: data.reply, sender: 'bot' }]);
+    ```

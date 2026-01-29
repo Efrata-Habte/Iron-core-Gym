@@ -1,61 +1,69 @@
-# 08. Admin Dashboard
+# 08. Admin Dashboard Deep Dive
 
-## Purpose
-A restricted area for Gym Administrators to view insights and manage the business.
+The Admin Dashboard is where business logic gets complex. We need to calculate revenue and manage users.
 
-## Frontend Components
-- **`admin/AdminStats.jsx`**: Shows "Total Users", "Active Members", and "Revenue".
-- **`admin/AdminUsers.jsx`**: Table of all registered users. Allows toggling membership status.
-- **`admin/AdminTrainerForm.jsx`**: Form to add new trainers.
-- **`admin/AdminGalleryApproval.jsx`**: Review pending image uploads.
+## 1. Calculating Stats (`controllers/statsController.js`)
+We use **MongoDB Aggregation Pipeline**. This is like SQL `JOIN` and `SUM` but for NoSQL.
 
-## Backend Endpoints
+```javascript
+exports.getStats = async (req, res) => {
+    // 1. Simple Counts
+    const totalUsers = await User.countDocuments();
+    const activeMembers = await User.countDocuments({ membershipStatus: 'active' });
 
-### 1. Stats (`routes/statsRoutes.js`)
-- **Endpoint**: `GET /api/stats`
-- **Controller**: `statsController.getStats`
-- **Middleware**: `protect` + `admin`
-- **Logic**:
-  - Counts total users.
-  - Counts active members.
-  - Calculates revenue: Sum of `Plan.price` for all active members.
-    - Uses MongoDB Aggregation to `$lookup` Plan details for each user and `$sum` the prices.
+    // 2. Complex Calculation: Revenue
+    // Problem: Users have a Plan ID. Plans have a Price.
+    // We need to:
+    //   a. Find all active users.
+    //   b. "Lookup" (Join) the Plan details for each user.
+    //   c. Sum up the prices.
 
-### 2. User Management (`routes/userRoutes.js`)
-- **Endpoint**: `PATCH /api/users/:id`
-- **Controller**: `userController.updateUserStatus`
-- **Logic**: Toggles `membershipStatus` between 'active' and 'inactive'.
+    const revenueData = await User.aggregate([
+        // Step A: Filter
+        { $match: { membershipStatus: 'active' } },
 
-### 3. Gallery Approval (`routes/galleryRoutes.js`)
-- **Endpoint**: `PATCH /api/users/:id/status`
-- **Logic**: Discussed in [Gallery Documentation](./06_Gallery.md).
+        // Step B: Join with 'plans' collection
+        {
+            $lookup: {
+                from: 'plans',           // Collection to join
+                localField: 'membershipPlan', // Field in User
+                foreignField: '_id',     // Field in Plan
+                as: 'planDetails'        // Result array
+            }
+        },
 
-## Flow: Loading the Dashboard
-1.  **Admin** logs in.
-2.  **Navigation**: Clicks "Admin Dashboard" (only visible if role='admin').
-3.  **Fetch**: Frontend calls `GET /api/stats`.
-4.  **Display**: Cards show live data.
+        // Step C: Flatten the array (User has 1 plan, but lookup returns an array)
+        { $unwind: '$planDetails' },
 
----
+        // Step D: Group and Sum
+        {
+            $group: {
+                _id: null, // Group everything into one bucket
+                totalRevenue: { $sum: '$planDetails.price' } // Add up prices
+            }
+        }
+    ]);
 
-# 09. Contact Form
+    const revenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
 
-## Purpose
-Allows prospective members to get in touch with the gym.
+    res.json({ totalUsers, activeMembers, revenue });
+};
+```
 
-## Frontend Components
-- **`home/ContactSection.jsx`**: A form with Name, Email, and Message fields.
+## 2. Managing Users (`controllers/userController.js`)
+Admins can toggle a user's status (`active`/`inactive`).
 
-## Backend Endpoints (`routes/contactRoutes.js`)
+```javascript
+exports.updateUserStatus = async (req, res) => {
+    // Request comes to: PATCH /api/users/123
+    // Body: { membershipStatus: "inactive" }
 
-### 1. Send Email
-- **Endpoint**: `POST /api/contact`
-- **Controller**: `contactController.sendContactEmail`
-- **Logic**:
-  1.  Receives form data.
-  2.  Uses **Nodemailer** to send an email to the gym's official address (`process.env.EMAIL_USER`).
-  3.  **Response**: "Message sent successfully".
+    const user = await User.findById(req.params.id);
+    
+    // Update the field
+    user.membershipStatus = req.body.membershipStatus;
+    await user.save();
 
-## Tools
-- **Nodemailer**: A Node.js library for sending emails easily.
-- **Gmail (or SMTP)**: configured in `.env` to actually deliver the mail.
+    res.json(user);
+};
+```
