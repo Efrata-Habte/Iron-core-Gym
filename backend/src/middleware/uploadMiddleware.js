@@ -1,15 +1,8 @@
 const multer = require('multer');
 const path = require('path');
 
-// Storage engine
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-    }
-});
+// Storage engine (Memory for Base64 conversion)
+const storage = multer.memoryStorage();
 
 // Check file type
 function checkFileType(file, cb) {
@@ -39,11 +32,15 @@ const upload = multer({
  */
 function withUpload(fieldName) {
     return (req, res, next) => {
-        upload.single(fieldName)(req, res, (err) => {
-            if (err) {
-                return res.status(400).json({ message: 'File upload error: ' + err.message });
-            }
-            next();
+        return new Promise((resolve, reject) => {
+            upload.single(fieldName)(req, res, (err) => {
+                if (err) {
+                    res.status(400).json({ message: 'File upload error: ' + err.message });
+                    return resolve();
+                }
+                next();
+                resolve();
+            });
         });
     };
 }
