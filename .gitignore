@@ -22,3 +22,6 @@ backend/public/uploads/*
 
 # Vite cache
 .vite/
+
+#temporary testing scripts
+backend/scripts/*

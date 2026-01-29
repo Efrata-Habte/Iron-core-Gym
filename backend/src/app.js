@@ -30,6 +30,9 @@ router.get('/', (req, res) => {
  */
 async function requestHandler(req, res) {
     try {
+        // DEBUG: Log all incoming requests
+        console.log(`[REQUEST] ${req.method} ${req.url}`);
+
         // Extend response with helper methods
         extendResponse(res);
 
@@ -38,10 +41,10 @@ async function requestHandler(req, res) {
             return;
         }
 
-        // Serve static files
-        if (serveUploads(req, res)) {
-            return;
-        }
+        // Serve static files (Removed legacy uploads serving)
+        // if (serveUploads(req, res)) {
+        //    return;
+        // }
 
         // Parse request body for non-multipart requests
         const contentType = req.headers['content-type'] || '';

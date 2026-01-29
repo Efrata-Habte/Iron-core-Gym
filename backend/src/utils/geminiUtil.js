@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 exports.getGymAdvice = async (message) => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
         const prompt = `You are a professional gym trainer and nutritionist. Give concise and helpful advice about exercise and nutrition. 
         User asks: ${message}`;
 
@@ -13,6 +13,6 @@ exports.getGymAdvice = async (message) => {
         return response.text();
     } catch (err) {
         console.error('Gemini API Error:', err);
-        throw new Error('Failed to get advice from AI');
+        throw new Error(err.message || 'Failed to get advice from AI');
     }
 };
