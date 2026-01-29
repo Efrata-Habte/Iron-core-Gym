@@ -6,6 +6,7 @@ exports.chat = async (req, res) => {
         const reply = await getGymAdvice(message);
         res.json({ reply });
     } catch (err) {
+        console.error('[CHATBOT] Controller Error:', err.message);
         res.status(500).json({ message: err.message });
     }
 };
