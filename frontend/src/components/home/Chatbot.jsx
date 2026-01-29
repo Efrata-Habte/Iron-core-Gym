@@ -39,10 +39,14 @@ export default function Chatbot() {
             if (!res.ok) {
                 // Determine specific error for notification
                 let notificationError = 'An unexpected error occurred.';
+                let aiResponse = 'Sorry, I am having trouble thinking right now. Please try again later.';
 
-                if (data.message) {
-                    if (data.message.includes('404') || data.message.includes('not found')) {
-                        notificationError = 'System Error: AI Model not found or API Key invalid. Please check backend configuration.';
+                if (data.message === 'AI_QUOTA_EXHAUSTED') {
+                    notificationError = 'AI service is currently busy due to high demand. Please try again in a few minutes.';
+                    aiResponse = 'My apologies! I have reached my daily limit for advice. Please try again later or check back in a few minutes when my energy is restored! 💪';
+                } else if (data.message) {
+                    if (data.message.includes('404')) {
+                        notificationError = 'System Error: AI Model configuration issue.';
                     } else if (data.message.includes('API key')) {
                         notificationError = 'System Error: Invalid Gemini API Key.';
                     } else {
@@ -51,7 +55,7 @@ export default function Chatbot() {
                 }
 
                 addNotification(notificationError, 'error');
-                setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, I am having trouble thinking right now. Please try again later.' }]);
+                setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
             } else {
                 setMessages(prev => [...prev, { role: 'ai', text: data.reply || 'Sorry, I couldn\'t get an answer.' }])
             }
@@ -74,7 +78,11 @@ export default function Chatbot() {
                 <div className="chat-window">
                     {messages.map((msg, i) => (
                         <div key={i} className={`chat-bubble ${msg.role}`}>
-                            {msg.text}
+                            {msg.role === 'ai' ? (
+                                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                            ) : (
+                                msg.text
+                            )}
                         </div>
                     ))}
                     {loading && <div className="chat-bubble ai loading">Thinking...</div>}
@@ -138,6 +146,25 @@ export default function Chatbot() {
                     background: #333;
                     color: #eee;
                     border-bottom-left-radius: 0;
+                }
+                .chat-bubble.ai p {
+                    margin-bottom: 0.5rem;
+                }
+                .chat-bubble.ai p:last-child {
+                    margin-bottom: 0;
+                }
+                .chat-bubble.ai ul, .chat-bubble.ai ol {
+                    margin-left: 1.2rem;
+                    margin-top: 0.5rem;
+                    margin-bottom: 0.5rem;
+                }
+                .chat-bubble.ai strong {
+                    color: white;
+                }
+                .chat-bubble.ai hr {
+                    border: 0;
+                    border-top: 1px solid rgba(255,255,255,0.1);
+                    margin: 1rem 0;
                 }
                 .chat-input-area {
                     position: relative;
