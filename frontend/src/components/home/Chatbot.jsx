@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import { useNotification } from '../../context/NotificationContext'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Chatbot() {

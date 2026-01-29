@@ -1,3 +1,16 @@
+/* ============================================
+   RESPONSIVE MENU FIXES
+   ============================================ */
+
+/* Tablet breakpoint - adjust nav spacing */
+@media screen and (max-width: 1024px) and (min-width: 761px) {
+    nav {
+        width: 85%;
+        padding: 11px 24px;
+    }
+}
+
+/* Mobile breakpoint - show hamburger menu */
 @media screen and (max-width: 760px) {
 
     /* Hide desktop nav on mobile */
@@ -8,15 +21,84 @@
     /* Show hamburger menu on mobile */
     .menu {
         display: block;
+        z-index: 99;
     }
 
-    /* Prevent body scroll when menu is open */
-    body.menu-open {
-        overflow: hidden;
+    /* Mobile menu backdrop overlay - separate element approach */
+    body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 98;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease-out;
+    }
+
+    /* Show backdrop when menu is open */
+    body.menu-open::after {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Improved mobile menu positioning and styling */
+    nav.narrow {
+        min-width: 300px;
+        max-width: 85vw;
+        padding: 2rem 1.5rem;
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.5);
+        z-index: 101;
+        border-radius: 12px 0 0 12px;
+        border: 1px solid rgba(192, 0, 0, 0.3);
+    }
+
+    /* Enhanced narrow-top styling */
+    .narrow .narrow-top {
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(192, 0, 0, 0.2);
+        margin-bottom: 1rem;
+    }
+
+    /* Better link spacing in mobile menu */
+    nav.narrow a {
+        padding: 0.8rem 0.5rem;
+        font-size: 1.1rem;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+    }
+
+    nav.narrow a:hover {
+        background: rgba(192, 0, 0, 0.1);
+        padding-left: 1rem;
     }
 }
 
-/* Ensure mobile menu overlay covers screen if that's the intention, 
-   but original CSS implies 'right: 20px', 'top: 20px', 'width: fit-content'.
-   We stick to original CSS for .narrow styling.
-*/
+/* Very small screens - optimize spacing */
+@media screen and (max-width: 400px) {
+    .menu {
+        right: 1rem;
+    }
+
+    nav.narrow {
+        right: 10px;
+        top: 10px;
+        min-width: 260px;
+        padding: 1.5rem 1.2rem;
+    }
+
+    .narrow .narrow-top {
+        gap: 2rem;
+    }
+
+    header {
+        padding: 1rem;
+    }
+
+    nav.narrow a {
+        font-size: 1rem;
+    }
+}
