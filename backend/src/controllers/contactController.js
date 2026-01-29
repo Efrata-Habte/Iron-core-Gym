@@ -15,7 +15,7 @@ exports.sendContactEmail = async (req, res) => {
         const mailOptions = {
             from: email,
             to: process.env.EMAIL_USER,
-            subject: `Gym Contact Form: Message from ${name}`,
+            subject: `Iron-Core-Gym Contact Form: Message from ${name}`,
             text: `Name: ${name}\nEmail: ${email}\n\nMessage: ${msg}`
         };
 

@@ -4,17 +4,8 @@ const galleryController = require('../controllers/galleryController');
 const multer = require('multer');
 const path = require('path');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-
+const storage = multer.memoryStorage(); // Store files in memory buffer
 const upload = multer({ storage });
-
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // Wrapper to make multer work as middleware
@@ -28,6 +19,7 @@ const withUpload = (fieldName) => (req, res, next) => {
 };
 
 router.get('/', galleryController.getGalleryImages);
+router.get('/:id/image', galleryController.getGalleryImageFile); // New route to serve image data
 router.post('/', protect, withUpload('image'), galleryController.uploadImage);
 
 // Admin-only endpoints

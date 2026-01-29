@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-export default function Button({ children, to, onClick, type = 'button', className = '' }) {
+export default function Button({ children, to, onClick, type = 'button', className = '', ...props }) {
     // common.css styles all <button> tags globally
     // We just need to render the tag. If it's a Link, we might need to ensure it wraps a button or looks like one.
     // In original HTML: <a href...><button>Get Membership</button></a>
@@ -8,13 +8,13 @@ export default function Button({ children, to, onClick, type = 'button', classNa
     if (to) {
         return (
             <Link to={to} className={className}>
-                <button>{children}</button>
+                <button {...props}>{children}</button>
             </Link>
         )
     }
 
     return (
-        <button type={type} onClick={onClick} className={className}>
+        <button type={type} onClick={onClick} className={className} {...props}>
             {children}
         </button>
     )

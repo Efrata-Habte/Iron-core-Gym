@@ -30,11 +30,22 @@ export default function Gallery() {
             .then(res => res.json())
             .then(data => {
                 if (!Array.isArray(data)) {
-                    console.error('API Error:', data);
                     addNotification('Failed to fetch gallery images', 'error');
                     return;
                 }
-                const imgUrls = data.map(img => img.image ? `${API_URL.replace('/api', '')}${img.image}` : img);
+                // Construct absolute URLs if needed, otherwise use the virtual 'image' field directly
+                const imgUrls = data.map(img => {
+                    if (img.image.startsWith('http')) return img.image;
+                    // If it's a relative path from our API (like /api/gallery/:id/image), simple prepend host if needed
+                    // But usually, if API_URL includes host, we might need to handle it.
+                    // Actually, the virtual 'image' returns `/api/gallery/:id/image`.
+                    // API_URL usually is `http://localhost:5000/api`.
+                    // So we want `http://localhost:5000/api/gallery/:id/image`.
+
+                    // Best approach: construct from API_URL base
+                    const baseUrl = API_URL.replace(/\/api$/, ''); // Remove trailing /api to get host
+                    return `${baseUrl}${img.image}`;
+                });
                 setImages(imgUrls);
             })
             .catch(err => console.error(err))
