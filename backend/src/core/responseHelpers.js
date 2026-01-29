@@ -33,6 +33,11 @@ function extendResponse(res) {
      */
     res.send = function (data) {
         this.statusCode = this._statusCode;
+        // Handle Buffer data (e.g., binary images) - send as-is with existing Content-Type
+        if (Buffer.isBuffer(data)) {
+            this.end(data);
+            return;
+        }
         if (typeof data === 'object') {
             return this.json(data);
         }
