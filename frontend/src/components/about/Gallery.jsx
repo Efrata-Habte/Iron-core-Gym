@@ -34,19 +34,17 @@ export default function Gallery() {
                     return;
                 }
                 // Construct absolute URLs if needed, otherwise use the virtual 'image' field directly
-                const imgUrls = data.map(img => {
-                    if (img.image.startsWith('http')) return img.image;
-                    // If it's a relative path from our API (like /api/gallery/:id/image), simple prepend host if needed
-                    // But usually, if API_URL includes host, we might need to handle it.
-                    // Actually, the virtual 'image' returns `/api/gallery/:id/image`.
-                    // API_URL usually is `http://localhost:5000/api`.
-                    // So we want `http://localhost:5000/api/gallery/:id/image`.
-
-                    // Best approach: construct from API_URL base
-                    const baseUrl = API_URL.replace(/\/api$/, ''); // Remove trailing /api to get host
-                    return `${baseUrl}${img.image}`;
+                // Construct absolute URLs and keep metadata
+                const imgData = data.map(img => {
+                    const baseUrl = API_URL.replace(/\/api$/, '');
+                    return {
+                        id: img._id,
+                        src: img.image.startsWith('http') ? img.image : `${baseUrl}${img.image}`,
+                        title: img.title || '',
+                        uploaderName: img.uploadedBy?.name || ''
+                    };
                 });
-                setImages(imgUrls);
+                setImages(imgData);
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
@@ -72,7 +70,14 @@ export default function Gallery() {
                 body: formData
             });
 
-            if (!res.ok) throw new Error('Upload failed');
+            const data = await res.json();
+            if (!res.ok) {
+                // Check for storage capacity error
+                if (res.status === 507 || data.isStorageFull) {
+                    throw new Error('Database storage is full. Please contact the administrator.');
+                }
+                throw new Error(data.message || 'Upload failed');
+            }
 
             addNotification((user.role === 'admin' || user.role === 'super-admin') ? 'Image uploaded!' : 'Image submitted for approval!', 'success');
             setShowUpload(false);
@@ -158,22 +163,30 @@ export default function Gallery() {
                 ) : images.length > 0 ? (
                     columns.map((column, colIndex) => (
                         <div key={colIndex} className="column">
-                            {column.map((src, i) => (
+                            {column.map((item, i) => (
                                 <div key={i} className="gallery-item-wrapper">
                                     <img
-                                        src={src}
-                                        alt="Gallery image"
+                                        src={item.src}
+                                        alt={item.title || "Gallery image"}
                                         loading="lazy"
-                                        onClick={() => setSelectedImage({ src, title: 'Iron Core Gallery' })}
-                                        style={{ cursor: 'zoom-in' }}
                                     />
-                                    <button
-                                        className="download-btn"
-                                        onClick={(e) => { e.stopPropagation(); downloadImage(src); }}
-                                        title="Download Image"
+                                    <div
+                                        className="gallery-item-overlay"
+                                        onClick={() => setSelectedImage(item)}
+                                        style={{ cursor: 'zoom-in' }}
                                     >
-                                        <Download size={20} />
-                                    </button>
+                                        <div className="gallery-item-info">
+                                            {item.uploaderName && <span className="uploader-name">{item.uploaderName}</span>}
+                                            {item.title && <h4 className="image-title">{item.title}</h4>}
+                                        </div>
+                                        <button
+                                            className="download-btn"
+                                            onClick={(e) => { e.stopPropagation(); downloadImage(item.src); }}
+                                            title="Download Image"
+                                        >
+                                            <Download size={20} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -187,6 +200,8 @@ export default function Gallery() {
                 <ImageModal
                     imageSrc={selectedImage.src}
                     title={selectedImage.title}
+                    uploaderName={selectedImage.uploaderName}
+                    onDownload={() => downloadImage(selectedImage.src)}
                     onClose={() => setSelectedImage(null)}
                 />
             )}
@@ -195,35 +210,73 @@ export default function Gallery() {
                 .gallery-item-wrapper {
                     position: relative;
                     margin-bottom: 1rem;
+                    border-radius: 1rem;
+                    overflow: hidden;
                 }
                 .gallery-item-wrapper img {
                     width: 100%;
-                    border-radius: 1rem;
+                    display: block;
+                    transition: transform 0.5s ease;
+                }
+                .gallery-item-wrapper:hover img {
+                    transform: scale(1.05);
+                }
+                .gallery-item-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 30%, transparent 100%);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-end;
+                    padding: 1.5rem;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+                .gallery-item-wrapper:hover .gallery-item-overlay {
+                    opacity: 1;
+                }
+                .gallery-item-info {
+                    margin-right: 3rem;
+                }
+                .uploader-name {
+                    color: var(--font-color-dim);
+                    font-size: 0.8rem;
+                    display: block;
+                    text-transform: capitalize;
+                    letter-spacing: 1px;
+                    margin-bottom: 0.2rem;
+                    font-weight: 600;
+                }
+                .image-title {
+                    color: white;
+                    font-size: 1.4rem;
+                    margin: 0;
+                    font-weight: 500;
+                    line-height: 1.2;
                 }
                 .download-btn {
                     position: absolute;
-                    bottom: 10px;
-                    right: 10px;
+                    bottom: 1.5rem;
+                    right: 1.5rem;
                     background: rgba(255, 255, 255, 0.9);
                     border: none;
                     border-radius: 50%;
-                    padding: 8px;
+                    padding: 10px;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: black;
-                    opacity: 0;
-                    transition: opacity 0.3s ease, transform 0.2s ease;
+                    transition: all 0.2s ease;
                     transform: translateY(10px);
                 }
                 .gallery-item-wrapper:hover .download-btn {
-                    opacity: 1;
                     transform: translateY(0);
                 }
                 .download-btn:hover {
                     background: var(--primary-color);
                     color: white;
+                    transform: scale(1.1) !important;
                 }
             `}</style>
         </section>

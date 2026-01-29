@@ -418,7 +418,7 @@ footer p {
 .image-modal-content {
     position: relative;
     max-width: 90vw;
-    max-height: 90vh;
+    width: fit-content;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -427,39 +427,90 @@ footer p {
 
 .image-modal-content img {
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 75vh;
     object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .image-modal-close {
-    position: absolute;
-    top: -40px;
-    right: 0;
-    background: none;
+    position: fixed;
+    top: 30px;
+    right: 40px;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
     cursor: pointer;
-    padding: 8px;
+    padding: 12px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    z-index: 1001;
 }
 
 .image-modal-close:hover {
-    transform: scale(1.2);
-    background: none !important;
-    color: var(--red-font-color) !important;
+    transform: rotate(90deg);
+    background: white !important;
+    color: black !important;
+}
+
+.image-modal-metadata {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.image-modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    text-align: left;
+}
+
+.image-modal-uploader {
+    color: var(--font-color-dim);
+    font-size: 0.9rem;
+    text-transform: capitalize;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .image-modal-title {
     color: white;
-    margin-top: 1.5rem;
-    font-size: 1.5rem;
-    text-align: center;
+    font-size: 1.6rem;
+    margin: 0;
     font-family: var(--main-header-font-family);
+    line-height: 1.2;
+}
+
+.image-modal-download {
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.image-modal-download:hover {
+    transform: translateY(-5px);
+    background: #e0e0e0 !important;
+    color: black !important;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
 }
 
 /*================ Profile Popup ====================================*/

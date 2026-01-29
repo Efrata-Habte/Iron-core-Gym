@@ -30,6 +30,9 @@ router.get('/', (req, res) => {
  */
 async function requestHandler(req, res) {
     try {
+        // DEBUG: Log all incoming requests
+        console.log(`[REQUEST] ${req.method} ${req.url}`);
+
         // Extend response with helper methods
         extendResponse(res);
 
