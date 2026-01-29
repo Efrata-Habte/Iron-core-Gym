@@ -36,10 +36,8 @@ exports.getPendingImages = async (req, res) => {
 };
 
 exports.uploadImage = async (req, res) => {
-    console.log('uploader called'); //====================================================================================================
     try {
         const { title, category } = req.body;
-        console.log(req); //====================================================================================================
         // Admins and super-admins are auto-approved, regular users are pending
         const status = (req.user.role === 'admin' || req.user.role === 'super-admin') ? 'approved' : 'pending';
 
@@ -47,21 +45,22 @@ exports.uploadImage = async (req, res) => {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
+        let imageUrl = '';
+        if (req.file) {
+            const b64 = req.file.buffer.toString('base64');
+            imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+        }
+
         const image = new GalleryImage({
             title,
-            category,
-            data: req.file.buffer, // Save buffer to MongoDB
-            contentType: req.file.mimetype, // Save mimetype
+            category: category || 'General',
+            url: imageUrl,
             status,
             uploadedBy: req.user.id
         });
         await image.save();
 
-        // Return object without huge data buffer
-        const responseImage = image.toObject();
-        delete responseImage.data;
-
-        res.status(201).json(responseImage);
+        res.status(201).json(image);
     } catch (err) {
         // Check for MongoDB quota/storage limit errors
         if (err.code === 16500 || err.message.includes('quota') ||

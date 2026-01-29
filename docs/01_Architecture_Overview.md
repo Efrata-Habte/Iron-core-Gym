@@ -50,6 +50,7 @@ fetch('http://localhost:5000/api/auth/login', {
 The message arrives at the backend.
 1.  **CORS**: Checks if the request came from a trusted website (our frontend).
 2.  **Body Parser**: The data comes in as a messy stream of text. We convert it into a nice Object: `{ email: 'bob...', password: '123' }`.
+    *Note: If it's an Image Upload, we wait for the file to be processed first.*
 
 ### Step 3: Routing (`routes/authRoutes.js`)
 The server looks at the URL: `/api/auth/login`.

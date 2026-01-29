@@ -33,6 +33,13 @@ class Router {
 -   `addRoute`: When we say `router.get('/users', getUser)`, we are adding a rule to the list.
 -   `handle`: When a user actually visits `/users`, this function searches the list. If it finds a match, it runs `getUser()`.
 
+-   `handle`: When a user actually visits `/users`, this function searches the list. If it finds a match, it runs `getUser()`.
+
+### Important Note: Async Middleware
+Our Router loops through handlers. If a handler is slow (like **Multer** uploading a file), it must return a **Promise**.
+If it uses old-school callbacks, the Router won't wait for it!
+**Fix**: Wrap callback-style code in a `new Promise()`.
+
 ---
 
 ## 2. Response Helpers (`core/responseHelpers.js`)

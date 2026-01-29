@@ -5,11 +5,12 @@ The logic is: "You can only enroll if the trainer has space."
 
 ## 1. The Trainer Model (`models/Trainer.js`)
 
-We need to track how many people are enrolled.
+We store the Trainer's image directly in the database as a text string (Base64).
 
 ```javascript
 const TrainerSchema = new mongoose.Schema({
     name: String,
+    image: String, // "data:image/jpeg;base64,..."
     maxTrainees: { type: Number, default: 5 }, // The Limit
     currentTrainees: { type: Number, default: 0 }, // The Counter
     isAvailable: { type: Boolean, default: true } // The Flag
