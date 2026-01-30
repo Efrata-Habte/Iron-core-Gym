@@ -31,7 +31,9 @@ export default function TrainerCard({
                     </div>
                 </div>
 
-                <img src={image} alt={name} />
+                <div className="trainer-img-container">
+                    <img src={image} alt={name} />
+                </div>
             </GlassCard>
 
             {children}

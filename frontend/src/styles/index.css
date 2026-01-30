@@ -141,110 +141,139 @@ section.trainers-section {
     align-items: center;
     padding: var(--section-side-padding);
     position: relative;
+    gap: 4rem;
+    /* Robust gap between cards */
 }
 
 
+/* ============ Premium Trainer Card Styles ============ */
 .trainer-wrapper {
-    width: 80%;
+    width: 100%;
+    max-width: 1200px;
     display: flex;
-    padding-bottom: 6rem;
     position: relative;
+    padding: 0 2rem;
 }
 
 .trainer-wrapper.right {
-    justify-content: right;
+    justify-content: flex-end;
 }
 
 .trainer-wrapper.left {
-    justify-content: left;
+    justify-content: flex-start;
 }
 
+/* Base Card structure with Glassmorphism */
 .trainer-card {
     display: flex;
+    width: 85%;
+    min-width: 800px;
+    height: 420px;
     overflow: hidden;
-    position: relative;
-    width: 70%;
-    min-width: 600px;
+    padding: 0 !important;
+    /* Reset padding for split layout */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.left .trainer-card {
-    justify-content: end;
-    text-align: end;
-}
-
+/* Text Side */
 .trainer-text {
+    flex: 6;
+    /* 60% width */
     display: flex;
     flex-direction: column;
-    gap: 2.8rem;
-    max-width: 30rem;
-    padding: 3rem 1.6rem;
+    justify-content: center;
+    padding: 3rem 4rem;
+    gap: 1.5rem;
+    z-index: 2;
 }
 
 .left .trainer-text {
-    align-items: end;
+    order: 2;
+    /* Move text to right for left-positioned cards */
+    padding-left: 5rem;
 }
 
+.right .trainer-text {
+    padding-right: 5rem;
+}
+
+/* Image Side */
+.trainer-img-container {
+    flex: 4;
+    /* 40% width */
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    background: #111;
+}
+
+.trainer-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Fix distortion */
+    transition: transform 0.8s ease;
+}
+
+/* The Sliced Effect */
+.right .trainer-img-container {
+    clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+.left .trainer-img-container {
+    order: 1;
+    clip-path: polygon(0 0, 85% 0, 100% 100%, 0% 100%);
+}
+
+/* Hover Effects */
+.trainer-card:hover .trainer-img-container img {
+    transform: scale(1.1);
+}
+
+/* Typography Improvements */
 .trainer-text h1 {
-    margin-bottom: 0;
-}
-
-.left h1 {
-    width: fit-content;
+    font-size: 3rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+    font-weight: 800;
 }
 
 .trainer-text p {
-    display: flex;
-    gap: .8rem;
+    font-style: italic;
+    color: var(--font-color-dim);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    border-left: 3px solid var(--red-font-color);
+    padding-left: 1rem;
 }
 
 .trainer-text .quote {
-    display: block;
-    font-family: "Catamaran";
-    font-size: 3.6rem;
-    line-height: 0;
-    padding-top: 20px;
+    display: none;
+    /* Hide old quote symbol */
 }
 
 .trainer {
+    margin-top: 1rem;
     display: flex;
-    /* justify-content: space-between; */
-    gap: 4rem;
-    letter-spacing: 2px;
-    word-spacing: 10px;
+    align-items: center;
+    gap: 1.5rem;
 }
 
 .trainer h3 {
-    font-weight: 400;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
 }
 
 .working-yrs {
-    background-color: hsl(60, 98%, 48%);
-    color: black;
-    padding: 3px 8px;
-    border-radius: 8px;
-    word-spacing: 0;
-    letter-spacing: 0;
-}
-
-.trainer-card img {
-    position: absolute;
-    z-index: -1;
-    transition: all .8s ease-out;
-    top: -28%;
-    max-width: 760px;
-}
-
-.trainer-card:hover img {
-    opacity: .75;
-    scale: 1.08;
-}
-
-.right img {
-    right: -10%;
-}
-
-.left img {
-    left: -10%;
+    background: var(--red-font-color);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
 /* ------------ join-cta --------- */
@@ -372,22 +401,35 @@ section.store-cta {
     }
 
     /* ========= trainers ====== */
-
     section.trainers-section {
-        padding-left: 0;
-        padding-right: 0;
-        align-items: center;
+        padding: 4rem 1rem;
     }
 
     .trainer-wrapper {
-        width: fit-content;
-        padding-left: 0;
-        padding-right: 0;
+        width: 100%;
+        max-width: 100%;
+        padding-bottom: 4rem;
     }
 
     .trainer-card {
-        width: 90vw;
-        min-width: 400px;
+        flex-direction: column;
+        width: 100%;
+        min-width: unset;
+        height: auto;
+    }
+
+    .trainer-text {
+        padding: 2.5rem 2rem;
+        order: 2 !important;
+        /* Always text below image on mobile */
+    }
+
+    .trainer-img-container {
+        width: 100%;
+        height: 300px;
+        order: 1 !important;
+        clip-path: none !important;
+        /* Remove slant on mobile */
     }
 
 
@@ -447,39 +489,25 @@ section.store-cta {
     }
 
     /* ======= trainers ========== */
-
     .trainer-wrapper {
-        padding-bottom: 3.4rem;
+        padding-bottom: 2rem;
     }
 
-    .trainer-card {
-        min-width: 0;
+    .trainer-text h1 {
+        font-size: 2.2rem;
     }
 
-    .trainer-text {
-        padding: 1rem;
+    .trainer-img-container {
+        height: 250px;
     }
 
-    .right img {
-        right: -25%;
-        top: -15%;
-    }
-
-    .left img {
-        left: -27%;
-        top: -30%;
-    }
-
-    .trainer-card img {
-        scale: .9;
-    }
-
-    .trainer-card h1 {
-        font-size: 2rem;
+    .trainer h3 {
+        font-size: 1.2rem;
     }
 
     .join-cta p {
-        max-width: 25rem;
+        font-size: 1rem;
+        padding: 0 1rem;
     }
 
     /* ====== store cta ========= */
