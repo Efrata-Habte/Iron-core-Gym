@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { X, Menu, LogOut, User as UserIcon } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
@@ -31,6 +31,23 @@ export default function Header() {
         setShowProfile(true)
         setIsMenuOpen(false)
     }
+
+    // Toggle body class for mobile menu backdrop
+    useEffect(() => {
+        if (isMenuOpen) {
+            document.body.classList.add('menu-open')
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.classList.remove('menu-open')
+            document.body.style.overflow = ''
+        }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.classList.remove('menu-open')
+            document.body.style.overflow = ''
+        }
+    }, [isMenuOpen])
 
     return (
         <header>

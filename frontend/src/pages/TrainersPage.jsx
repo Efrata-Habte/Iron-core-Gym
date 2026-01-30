@@ -119,6 +119,7 @@ export default function TrainersPage() {
                     display: flex;
                     flex-direction: column;
                     width: 100%;
+                    overflow-x: hidden;
                 }
                 .trainers-grid {
                     display: grid;
@@ -127,6 +128,7 @@ export default function TrainersPage() {
                     padding: 2rem;
                     max-width: 1200px;
                     margin: 0 auto;
+                    width: 100%;
                 }
                 .trainer-simple-card {
                     padding: 0 !important;
@@ -212,6 +214,47 @@ export default function TrainersPage() {
                     font-style: italic;
                     color: var(--font-color-dim);
                     font-size: 0.9rem;
+                }
+
+                /* Responsive: 2 trainers per row on tablets and mobile */
+                @media screen and (max-width: 1024px) and (min-width: 768px) {
+                    .trainers-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 1.5rem;
+                        padding: 1.5rem;
+                    }
+                }
+
+                @media screen and (max-width: 767px) {
+                    .trainers-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap-y: 1.5rem;
+                        padding: 1rem;
+                    }
+                    .trainer-img-container {
+                        height: 250px;
+                    }
+                    .trainer-info {
+                        padding: 1rem;
+                    }
+                    .trainer-info h3 {
+                        font-size: 1.2rem;
+                    }
+                    .quote {
+                        font-size: 0.85rem;
+                    }
+                }
+
+                /* Very small screens: 1 trainer per row */
+                @media screen and (max-width: 500px) {
+                    .trainers-grid {
+                        grid-template-columns: 1fr;
+                        gap: 1.5rem;
+                        padding: 1rem;
+                    }
+                    .trainer-img-container {
+                        height: 300px;
+                    }
                 }
             `}</style>
         </section>
