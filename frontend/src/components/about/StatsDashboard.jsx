@@ -13,7 +13,7 @@ export default function StatsDashboard() {
                 setStats([
                     { value: `${data.yearsExperience || 0}+`, label: 'years of experience' },
                     { value: data.trainersCount || 0, label: 'trainers' },
-                    { value: `${data.traineesCount || 0}+`, label: 'trainees' },
+                    { value: `${data.traineesCount || 0}`, label: 'trainees' },
                     { value: '110+', label: 'testimonials' }, // Testimonials still static for now
                 ]);
             })

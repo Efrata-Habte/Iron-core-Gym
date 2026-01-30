@@ -44,11 +44,14 @@ export default function AdminTrainerList() {
         }
     };
 
-    if (loading) return <div className="loading-spinner"></div>;
+    if (loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <div className="loading-spinner"></div>
+        </div>
+    );
 
     return (
         <div className="users-table glass">
-            <h3 style={{ padding: '1rem 1rem 0', margin: 0 }}>Manage Trainers</h3>
             <table>
                 <thead>
                     <tr>

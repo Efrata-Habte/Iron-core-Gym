@@ -63,7 +63,11 @@ export default function AdminGalleryApproval() {
         }
     };
 
-    if (loading) return <div className="loading-spinner"></div>;
+    if (loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <div className="loading-spinner"></div>
+        </div>
+    );
 
     return (
         <div className="gallery-approval-section">

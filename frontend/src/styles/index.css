@@ -29,6 +29,7 @@ section.hero-section {
     letter-spacing: .1rem;
     margin-top: -20px;
     margin-bottom: 0;
+    text-align: start;
 }
 
 .hero h1 .red-text {
@@ -157,10 +158,18 @@ section.trainers-section {
 
 .trainer-wrapper.right {
     justify-content: flex-end;
+    
+    & h1 {
+        text-align: start;
+    }
 }
 
 .trainer-wrapper.left {
     justify-content: flex-start;
+
+    & h1 {
+        text-align: start;
+    }
 }
 
 /* Base Card structure with Glassmorphism */
