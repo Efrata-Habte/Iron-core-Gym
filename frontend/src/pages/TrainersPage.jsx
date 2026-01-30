@@ -118,6 +118,7 @@ export default function TrainersPage() {
                     padding-bottom: 6rem;
                     display: flex;
                     flex-direction: column;
+                    gap: 4rem;
                     width: 100%;
                     overflow-x: hidden;
                 }

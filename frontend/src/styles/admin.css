@@ -132,6 +132,11 @@
 }
 
 /* Pending Gallery Approvals */
+
+.gallery-approval-section h3 {
+    text-align: center;
+}
+
 .pending-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
