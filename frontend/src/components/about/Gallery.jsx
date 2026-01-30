@@ -37,13 +37,15 @@ export default function Gallery() {
                 // Construct absolute URLs and keep metadata
                 const imgData = data.map(img => {
                     const baseUrl = API_URL.replace(/\/api$/, '');
+                    // Skip images without valid url data
+                    if (!img.url) return null;
                     return {
                         id: img._id,
-                        src: img.image.startsWith('http') ? img.image : `${baseUrl}${img.image}`,
+                        src: img.url.startsWith('http') || img.url.startsWith('data:') ? img.url : `${baseUrl}${img.url}`,
                         title: img.title || '',
                         uploaderName: img.uploadedBy?.name || ''
                     };
-                });
+                }).filter(Boolean);
                 setImages(imgData);
             })
             .catch(err => console.error(err))

@@ -72,12 +72,12 @@ export default function AdminGalleryApproval() {
                 <div className="glass dim-text">No pending approvals.</div>
             ) : (
                 <div className="pending-grid">
-                    {pendingImages.map(img => (
+                    {pendingImages.filter(img => img.url).map(img => (
                         <div key={img._id} className="glass pending-card">
                             <img
-                                src={`${API_URL.replace('/api', '')}${img.image}`}
+                                src={img.url}
                                 alt={img.title}
-                                onClick={() => setSelectedImage({ src: `${API_URL.replace('/api', '')}${img.image}`, title: img.title })}
+                                onClick={() => setSelectedImage({ src: img.url, title: img.title })}
                                 style={{ cursor: 'zoom-in' }}
                             />
                             <div className="pending-info">

@@ -5,9 +5,17 @@
 
 .admin-tabs {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 4rem;
+    flex-wrap: wrap;
+}
+
+.admin-tabs button {
+    padding: 12px 30px !important;
+    min-width: 15rem;
+    font-weight: 500;
 }
 
 .active-tab {
