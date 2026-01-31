@@ -1,4 +1,5 @@
 const { Router } = require('../core/Router');
+
 const router = new Router();
 const trainerController = require('../controllers/trainerController');
 const { protect, admin } = require('../middleware/authMiddleware');
