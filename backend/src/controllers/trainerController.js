@@ -44,7 +44,10 @@ exports.deleteTrainer = async (req, res) => {
         if (!trainer) return res.status(404).json({ message: 'Trainer not found' });
 
         // Also unassign this trainer from all users
-        await User.updateMany({ assignedTrainer: req.params.id }, { $unset: { assignedTrainer: 1 } });
+        await User.updateMany(
+            { assignedTrainer: req.params.id }, 
+            { $unset: { assignedTrainer: 1 } }
+        );
 
         res.json({ message: 'Trainer removed' });
     } catch (err) {
